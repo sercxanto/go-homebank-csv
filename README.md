@@ -14,26 +14,14 @@ HomeBank is a crossplatform free and easy accounting software.
 ## Supported formats
 
 * MoneyWallet
-* Barclaycard
-* Volksbank
-* Comdirect
-
-### MoneyWallet
-
-[MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is an expense manager for Android.
+  * [MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is an expense manager for Android.
 go-homebank-csv supports parsing and converting the CSV export format.
-
-### Barclaycard
-
-This is the excel export format of Barclays VISA card as found on [www.barclays.de](https://www.barclays.de).
-
-### Volksbank
-
-This is the CSV export format used by a German Volksbank. Most probably Volksbanks have the same format.
-
-### Comdirect
-
-This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
+* Barclaycard
+  * Not exactly CSV, this is the excel export format of Barclays VISA card as found on [www.barclays.de](https://www.barclays.de).
+* Volksbank
+  * This is the CSV export format used by a German Volksbank. Most probably all Volksbanks have the same format.
+* Comdirect
+  * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
 It has some weird encoding and the internal structure changes often.
 
 ## Usage
@@ -193,3 +181,56 @@ make doc-serve
 ```
 
 It starts a server in the foreground and opens a webbrowser.
+
+### Start with a new change
+
+Call `changie new`:
+
+```shell
+changie new
+```
+
+This will ask for the kind of change and create a new file in `./changes/unreleased`.
+
+### Create new release
+
+The release process consists of the following steps:
+
+1. Create changelog locally
+2. Test goreleaser locally
+3. Tag the release locally and trigger goreleaser on Github CI
+
+#### Create changelog locally
+
+`changie batch` collects unreleased changes info from `./changes/unreleased` and creates a
+new version file like `./changes/v1.2.3.md`.
+
+`changie merge` collects version files from the `./changes` folder and updates `CHANGELOG.md`.
+
+Change `minor`to the type of change:
+
+```shell
+changie batch minor
+changie merge
+```
+You may want to call the changie commands with the `--dry-run` to preview the changelog.
+
+Don't forget to commit the changes so that the workspace is clean:
+
+```shell
+git add .
+git commit -m "Prepare release $(changie latest)"
+```
+
+#### Test goreleaser locally
+
+```shell
+goreleaser release --snapshot --clean --release-notes .changes/$(changie latest).md
+```
+
+#### Tag the release locally and trigger goreleaser on Github CI
+
+```shell
+git tag $(changie latest)
+git push origin main && git push --tags
+```
