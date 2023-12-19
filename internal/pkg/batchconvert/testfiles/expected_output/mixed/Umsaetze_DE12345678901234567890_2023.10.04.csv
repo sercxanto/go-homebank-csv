@@ -1,0 +1,5 @@
+date;payment;info;payee;memo;amount;category;tags
+2023-10-04;0;;Name des Zahlungsbeteiligten;Verwendungszweck abc;-6.000000;;
+2023-10-02;0;;Umlaute äöß;Verwendungszweck xyz;600.000000;;
+2023-09-29;0;;Vorname Nachname;Verwendungszweck ghijkl mnop, ,x;-17.000000;;
+2023-09-29;0;;;Abschluss per 30.09.2023;-19.200000;;

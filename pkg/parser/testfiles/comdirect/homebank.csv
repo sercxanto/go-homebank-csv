@@ -1,0 +1,5 @@
+date;payment;info;payee;memo;amount;category;tags
+2023-10-06;0;Text1 Text2 Text3;Auftraggeber Text;Auftraggeber: Auftraggeber Text Buchungstext: Text1 Text2 Text3 Text4 2023-10-05T18:54:23 Ref. ABCDEF123456/0815;-40.010000;;
+2023-10-05;0;Text8 Text9 Text10;;Auftraggeber: Auftraggeber Text 2 Buchungstext: Text8 Text9 Text10 Ref. A1234567891/0;1265.640000;;
+2023-10-02;0;Buchungstext Ref. DE987654321/1;Name1 Name2;Empfänger: Name1 Name2Kto/IBAN: DE74823743947247234 BLZ/BIC: AAACCCBBBDDD1  Buchungstext: Buchungstext Ref. DE987654321/1;-1234.560000;;
+2023-09-04;0;Bargeldauszahlung Bank1 Bank2//Ort/DE;BANK1 BANK2;Auftraggeber: BANK1 BANK2 Buchungstext: Bargeldauszahlung Bank1 Bank2//Ort/DE 2023-09-02T12:34:56 abc xyz text Ref. KHDLD78278/222;-150.000000;;
