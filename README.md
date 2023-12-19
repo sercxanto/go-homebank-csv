@@ -1,5 +1,10 @@
 # go-homebank-csv
 
+![Build and test](https://github.com/sercxanto/go-homebank-csv/actions/workflows/build-and-test.yml/badge.svg)
+![golangci-lint](https://github.com/sercxanto/go-homebank-csv/actions/workflows/golangci-lint.yml/badge.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sercxanto/go-homebank-csv.svg)](https://pkg.go.dev/github.com/sercxanto/go-homebank-csv)
+[![codecov](https://codecov.io/gh/sercxanto/go-homebank-csv/graph/badge.svg?token=HB6HHXV7X6)](https://codecov.io/gh/sercxanto/go-homebank-csv)
+
 This tool converts "comma separated values" (CSV) files from several banks to the
 ["Transaction import CSV format"](http://homebank.free.fr/help/misc-csvformat.html)
 supported by [HomeBank](http://homebank.free.fr/).
