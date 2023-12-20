@@ -2,7 +2,7 @@ batchconvert:
   sets:
   - name: "name1"
     inputdir: "/my/path11"
-    outputdir: "/my/path12"    
+    outputdir: "/my/path12"
     fileglobpattern: "*.csv"
     filemaxagedays: 5
     format: "Barclaycard"

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"os"
+	"strings"
 )
 
 func areFilesEqual(file1, file2 string) bool {
@@ -13,5 +14,7 @@ func areFilesEqual(file1, file2 string) bool {
 	if err != nil {
 		return false
 	}
-	return string(file1Data) == string(file2Data)
+
+	// Trim CRs to avoid differences on Windows
+	return strings.Trim(string(file1Data), "\r") == strings.Trim(string(file2Data), "\r")
 }
