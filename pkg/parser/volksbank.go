@@ -55,7 +55,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
+				Line:      lineNr + 2,
 				Field:     "Buchungstag",
 			}
 		}
@@ -65,8 +65,8 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
-				Field:     "money",
+				Line:      lineNr + 2,
+				Field:     "Betrag",
 			}
 		}
 		vRecord := volksbankRecord{

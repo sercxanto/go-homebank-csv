@@ -1,0 +1,2 @@
+Bezeichnung Auftragskonto;IBAN Auftragskonto;BIC Auftragskonto;Bankname Auftragskonto;Buchungstag;Valutadatum;Name Zahlungsbeteiligter;IBAN Zahlungsbeteiligter;BIC (SWIFT-Code) Zahlungsbeteiligter;Buchungstext;Verwendungszweck;Betrag;Waehrung;Saldo nach Buchung;Bemerkung;Kategorie;Steuerrelevant;Glaeubiger ID;Mandatsreferenz
+VR-Giro Direkt;DE12345678901234567890;BIC00000001;VOLKSBANK ORT1 FIL ORT2;2023-10-04;04.10.2023;Name des Zahlungsbeteiligten;DE98765432109876543210;BIC00000002;Basislastschrift;Verwendungszweck abc;-6;EUR;1000;;Sonstiges;;DE99ZZZ00000123456;1112223334

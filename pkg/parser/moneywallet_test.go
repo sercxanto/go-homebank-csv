@@ -33,6 +33,7 @@ func TestMoneywalletParseFileNonExisting(t *testing.T) {
 	}
 }
 
+/*
 func TestMoneywalletParseFileNok(t *testing.T) {
 	fpath := filepath.Join("testfiles", "moneywallet", "converted_1.csv")
 	mw := &moneywalletParser{}
@@ -50,6 +51,98 @@ func TestMoneywalletParseFileNok(t *testing.T) {
 		}
 	} else {
 		t.Error("Expected ParserError")
+	}
+
+	if len(mw.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+*/
+
+func TestMoneywalletParseFileNokNoHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_nok_noheader.csv")
+	mw := &moneywalletParser{}
+	err := mw.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != HeaderError {
+			t.Error("Expected HeaderError")
+		}
+		if pError.Line != 0 {
+			t.Errorf("Expected HeaderError on line 0, got %d", pError.Line)
+		}
+	} else {
+		t.Error("Expected ParserError")
+	}
+
+	if len(mw.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestMoneywalletParseFileNokWrongDatetime(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_nok_wrongdatetime.csv")
+	mw := &moneywalletParser{}
+	err := mw.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Error("Expected DataParsingError")
+		}
+		if pError.Line != 1 {
+			t.Errorf("Expected DataParsingError on line 1, got %d", pError.Line)
+		}
+		if pError.Field != "datetime" {
+			t.Errorf("Expected field 'datetime', got '%s' instead", pError.Field)
+		}
+	} else {
+		t.Error("Expected ParserError")
+	}
+
+	if len(mw.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestMoneywalletParseFileNokWrongMoney(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_nok_wrongmoney.csv")
+	mw := &moneywalletParser{}
+	err := mw.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Error("Expected DataParsingError")
+		}
+		if pError.Line != 1 {
+			t.Errorf("Expected DataParsingError on line 1, got %d", pError.Line)
+		}
+		if pError.Field != "money" {
+			t.Errorf("Expected field 'money', got '%s' instead", pError.Field)
+		}
+	} else {
+		t.Error("Expected ParserError")
+	}
+
+	if len(mw.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestMoneywalletParseFileOnlyHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_onlyheader.csv")
+	mw := &moneywalletParser{}
+	err := mw.ParseFile(fpath)
+	if err != nil {
+		t.Fatal("Should not fail")
 	}
 
 	if len(mw.entries) != 0 {

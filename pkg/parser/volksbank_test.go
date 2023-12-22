@@ -33,8 +33,8 @@ func TestVolksbankParseFileNonExisting(t *testing.T) {
 	}
 }
 
-func TestVolksbankParseFileNok(t *testing.T) {
-	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_export_1.csv")
+func TestVolksbankParseFileNokNoHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "volksbank", "Umsaetze_nok_noheader.csv")
 	v := &volksbankParser{}
 	err := v.ParseFile(fpath)
 	if err == nil {
@@ -42,11 +42,75 @@ func TestVolksbankParseFileNok(t *testing.T) {
 	}
 	var pError *ParserError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError && pError.ErrorType != IOError {
-			t.Errorf("HeaderError or IOError expected, got '%s' instead", pError.ErrorType)
+		if pError.ErrorType != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
 		}
 	} else {
 		t.Error("ParserError expected")
+	}
+	if len(v.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestVolksbankParseFileNokWrongBuchungstag(t *testing.T) {
+	fpath := filepath.Join("testfiles", "volksbank", "Umsaetze_nok_wrongbuchungstag.csv")
+	v := &volksbankParser{}
+	err := v.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Field != "Buchungstag" {
+			t.Errorf("Expected field 'Buchungstag', got '%s' instead", pError.Field)
+		}
+		if pError.Line != 2 {
+			t.Errorf("Expected line 2, got %d", pError.Line)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(v.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestVolksbankParseFileNokWrongBetrag(t *testing.T) {
+	fpath := filepath.Join("testfiles", "volksbank", "Umsaetze_nok_wrongbetrag.csv")
+	v := &volksbankParser{}
+	err := v.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Field != "Betrag" {
+			t.Errorf("Expected field 'Betrag', got '%s' instead", pError.Field)
+		}
+		if pError.Line != 2 {
+			t.Errorf("Expected line 2, got %d", pError.Line)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(v.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestVolksbankParseFileOnlyHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "volksbank", "Umsaetze_onlyheader.csv")
+	v := &volksbankParser{}
+	err := v.ParseFile(fpath)
+	if err != nil {
+		t.Fatal("Should not fail")
 	}
 	if len(v.entries) != 0 {
 		t.Error("Entries should be empty")
