@@ -16,7 +16,7 @@ func TestComdirectName(t *testing.T) {
 }
 
 func TestComdirectParseFileNonExisting(t *testing.T) {
-	v := &volksbankParser{}
+	v := &comdirectParser{}
 	err := v.ParseFile("non_existing_file.csv")
 	if err == nil {
 		t.Error("Non existing file should return error")
@@ -35,21 +35,108 @@ func TestComdirectParseFileNonExisting(t *testing.T) {
 }
 
 func TestComdirectParseFileNok(t *testing.T) {
-	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_export_1.csv")
-	v := &volksbankParser{}
-	err := v.ParseFile(fpath)
+	fpath := filepath.Join("testfiles", "comdirect", "umsaetze_nok_noheader.csv")
+	c := &comdirectParser{}
+	err := c.ParseFile(fpath)
 	if err == nil {
 		t.Error("Should fail")
 	}
 	var pError *ParserError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError && pError.ErrorType != IOError {
-			t.Errorf("HeaderError or IOError expected, got '%s' instead", pError.ErrorType)
+		if pError.ErrorType != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
 		}
 	} else {
 		t.Error("ParserError expected")
 	}
-	if len(v.entries) != 0 {
+	if len(c.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestComdirectParseFileNokInvalidHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "comdirect", "umsaetze_nok_invalidheader.csv")
+	c := &comdirectParser{}
+	err := c.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 4 {
+			t.Errorf("Expected error on line 4, got %d", pError.Line)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(c.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestComdirectParseFileNokWrongBuchungstag(t *testing.T) {
+	fpath := filepath.Join("testfiles", "comdirect", "umsaetze_nok_wrongbuchungstag.csv")
+	c := &comdirectParser{}
+	err := c.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
+		}
+		if pError.Field != "Buchungstag" {
+			t.Errorf("Expected error on field 'Buchungstag', got %s", pError.Field)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(c.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestComdirectParseFileNokWrongUmsatz(t *testing.T) {
+	fpath := filepath.Join("testfiles", "comdirect", "umsaetze_nok_wrongumsatz.csv")
+	c := &comdirectParser{}
+	err := c.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
+		}
+		if pError.Field != "Umsatz in EUR" {
+			t.Errorf("Expected error on field 'Umsatz in EUR', got %s", pError.Field)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(c.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestComdirectParseFileOnlyHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "comdirect", "umsaetze_onlyheader.csv")
+	c := &comdirectParser{}
+	err := c.ParseFile(fpath)
+	if err != nil {
+		t.Error("Should not fail")
+	}
+	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
 	}
 }
