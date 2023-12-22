@@ -17,5 +17,5 @@ func areFilesEqual(file1, file2 string) bool {
 
 	// Trim possible all line endings to avoid differences on Windows
 	// and with git autocrlf settings
-	return strings.Trim(string(file1Data), "\r\n") == strings.Trim(string(file2Data), "\r\n")
+	return strings.ReplaceAll(string(file1Data), "\r", "") == strings.ReplaceAll(string(file2Data), "\r", "")
 }

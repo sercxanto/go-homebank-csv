@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -79,7 +80,9 @@ func areFilesEqual(file1, file2 string) (bool, error) {
 		return false, err
 	}
 
-	return string(content1) == string(content2), nil
+	// Trim possible all line endings to avoid differences on Windows
+	// and with git autocrlf settings
+	return strings.ReplaceAll(string(content1), "\r", "") == strings.ReplaceAll(string(content2), "\r", ""), nil
 }
 
 func extractFileNames(paths []string) []string {
