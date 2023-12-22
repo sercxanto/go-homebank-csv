@@ -33,8 +33,8 @@ func TestBarclaycardParseFileNonExisting(t *testing.T) {
 	}
 }
 
-func TestBarclaycardParseFileNok(t *testing.T) {
-	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_notok.xlsx")
+func TestBarclaycardParseFileNokNoHeader(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_nok_noheader.xlsx")
 	bc := &barclaycardParser{}
 	err := bc.ParseFile(fpath)
 	if err == nil {
@@ -44,6 +44,104 @@ func TestBarclaycardParseFileNok(t *testing.T) {
 	if errors.As(err, &pError) {
 		if pError.ErrorType != HeaderError {
 			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(bc.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestBarclaycardParseFileNokNoSheet1(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_nok_nosheet1.xlsx")
+	bc := &barclaycardParser{}
+	err := bc.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(bc.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestBarclaycardParseFileNokWrongDate1(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_nok_wrongdate1.xlsx")
+	bc := &barclaycardParser{}
+	err := bc.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 14 {
+			t.Errorf("Expected line 14, got %d", pError.Line)
+		}
+		if pError.Field != "Buchungsdatum(1)/Transaktionsdatum" {
+			t.Errorf("Expected field 'Buchungsdatum(1)/Transaktionsdatum', got '%s' instead", pError.Field)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(bc.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestBarclaycardParseFileNokWrongDate2(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_nok_wrongdate2.xlsx")
+	bc := &barclaycardParser{}
+	err := bc.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 14 {
+			t.Errorf("Expected line 14, got %d", pError.Line)
+		}
+		if pError.Field != "Buchungsdatum" {
+			t.Errorf("Expected field 'Buchungsdatum', got '%s' instead", pError.Field)
+		}
+	} else {
+		t.Error("ParserError expected")
+	}
+	if len(bc.entries) != 0 {
+		t.Error("Entries should be empty")
+	}
+}
+
+func TestBarclaycardParseFileNokWrongAmount(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_nok_wrongamount.xlsx")
+	bc := &barclaycardParser{}
+	err := bc.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		}
+		if pError.Line != 14 {
+			t.Errorf("Expected line 14, got %d", pError.Line)
+		}
+		if pError.Field != "Betrag" {
+			t.Errorf("Expected field 'Betrag', got '%s' instead", pError.Field)
 		}
 	} else {
 		t.Error("ParserError expected")

@@ -47,20 +47,15 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	if err != nil {
 		return &ParserError{ErrorType: IOError}
 	}
-	if len(records) < headerInRecordNr {
+	if len(records) < headerInRecordNr+1 {
 		return &ParserError{ErrorType: HeaderError}
 	}
 
 	if !isValidComdirectHeader(records[headerInRecordNr]) {
 		return &ParserError{
 			ErrorType: HeaderError,
-			Line:      headerInRecordNr + 1,
+			Line:      headerInRecordNr + 2,
 		}
-	}
-
-	// Only header found, no entries
-	if len(records) == headerInRecordNr+1 {
-		return nil
 	}
 
 	for lineNr, row := range records[headerInRecordNr+1:] {
@@ -74,7 +69,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
+				Line:      lineNr + 6,
 				Field:     "Buchungstag",
 			}
 		}
@@ -85,7 +80,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
+				Line:      lineNr + 6,
 				Field:     "Umsatz in EUR",
 			}
 		}
@@ -153,11 +148,11 @@ buchungstext: "first:abcfirstsecond:abcsecond third:abcthird"
 
 Result:
 
-{
-	"first": "abcfirst",
-	"second": "abcsecond",
-	"third": "abcthird"
-}
+	{
+		"first": "abcfirst",
+		"second": "abcsecond",
+		"third": "abcthird"
+	}
 */
 func splitComdirectBuchungstext(fields []string, buchungstext string) map[string]string {
 	result := make(map[string]string)
@@ -230,7 +225,8 @@ func isValidComdirectHeader(record []string) bool {
 	return reflect.DeepEqual(record, expected)
 }
 
-/*	convertRecord converts a single record from comdirect to homebank format
+/*
+	convertRecord converts a single record from comdirect to homebank format
 
 Example:
 

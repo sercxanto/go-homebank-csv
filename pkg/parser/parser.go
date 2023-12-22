@@ -52,6 +52,8 @@ func GetSourceFormats() []SourceFormat {
 	return formats
 }
 
+// Returns the textual representation of the source format
+// Returns "unknown format" if the format is not supported
 func (s SourceFormat) String() string {
 	for key, value := range sourceFormats {
 		if key == s {
@@ -72,7 +74,7 @@ func (s *SourceFormat) UnmarshalText(text []byte) error {
 	return fmt.Errorf("unsupported format '%s'", textString)
 }
 
-// NewSourceFormat returns a point to a new SourceFormat
+// NewSourceFormat returns a pointer to a new SourceFormat
 func NewSourceFormat(value SourceFormat) *SourceFormat {
 	return &value
 }

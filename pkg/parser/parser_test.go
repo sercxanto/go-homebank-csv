@@ -8,8 +8,56 @@ import (
 func TestGetParser(t *testing.T) {
 	for _, f := range GetSourceFormats() {
 		p := GetParser(f)
+		if p == nil {
+			t.Fatal("Parser not found")
+		}
 		if p.GetFormat() != f {
 			t.Error("Parser mismatch")
+		}
+	}
+	p := GetParser(999999999)
+	if p != nil {
+		t.Fatal("Expected nil parser")
+	}
+}
+
+func TestSourceFormatString(t *testing.T) {
+	for _, f := range GetSourceFormats() {
+		s := SourceFormat(f).String()
+		if s == "" || s == "unknown format" {
+			t.Errorf("Expected valid string, got: %s", s)
+		}
+	}
+	s := SourceFormat(999999999).String()
+	if s != "unknown format" {
+		t.Errorf("Expected 'unknown format', got: %s", s)
+	}
+}
+
+func TestUnmarshalSourceFormatText(t *testing.T) {
+	for key, value := range sourceFormats {
+		var s SourceFormat
+		err := s.UnmarshalText([]byte(value))
+		if err != nil {
+			t.Errorf("Expected nil error, got: %v", err)
+		}
+		if s != key {
+			t.Errorf("Expected: %v, got: %v", key, s)
+		}
+	}
+
+	var s SourceFormat
+	err := s.UnmarshalText([]byte("no valid format"))
+	if err == nil {
+		t.Error("Expected error")
+	}
+}
+
+func TestNewSourceFormat(t *testing.T) {
+	for _, f := range GetSourceFormats() {
+		s := NewSourceFormat(f)
+		if s == nil {
+			t.Error("Expected non nil pointer")
 		}
 	}
 }
