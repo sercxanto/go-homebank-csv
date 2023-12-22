@@ -69,9 +69,9 @@ A minimal version of a config file looks like the following:
 ```yaml
 batchconvert:
   sets:
-  - name: "Bank 1"
-    inputdir: "/home/user/finance/barclaycard/xlsx"
-    outputdir: "/home/user/finance/barclaycard/homebankcsv"
+  - name: Bank 1
+    inputdir: /home/user/finance/barclaycard/xlsx
+    outputdir: /home/user/finance/barclaycard/homebankcsv
 ```
 
 The fields have the following meaning:
@@ -85,12 +85,12 @@ The minimal version can be amended by optional settings:
 ```yaml
 batchconvert:
   sets:
-  - name: "Bank 1"
-    inputdir: "/home/user/finance/barclaycard/xlsx"
-    outputdir: "/home/user/finance/barclaycard/homebankcsv"
+  - name: Bank 1
+    inputdir: /home/user/finance/barclaycard/xlsx
+    outputdir: /home/user/finance/barclaycard/homebankcsv
     fileglobpattern: "*.xlsx"
     filemaxagedays: 3
-    format: "Barclaycard"
+    format: Barclaycard
 ```
 
 The additional fields have the following meaning:
@@ -110,18 +110,18 @@ With a config file like this:
 ```yaml
 batchconvert:
   sets:
-  - name: "Bank 1"
-    inputdir: "/home/user/finance/barclaycard/xlsx"
-    outputdir: "/home/user/finance/barclaycard/homebankcsv"
+  - name: Bank 1
+    inputdir: /home/user/finance/barclaycard/xlsx
+    outputdir: /home/user/finance/barclaycard/homebankcsv
     fileglobpattern: "*.xlsx"
     filemaxagedays: 3
-    format: "Barclaycard"
-  - name: "Bank 2"
-    inputdir: "/home/user/finance/volksbank/csv"
-    outputdir: "/home/user/finance/volksbank/homebankcsv"
+    format: Barclaycard
+  - name: Bank 2
+    inputdir: /home/user/finance/volksbank/csv
+    outputdir: /home/user/finance/volksbank/homebankcsv
     fileglobpattern: "*.csv"
     filemaxagedays: 2
-    format: "Volksbank"
+    format: Volksbank
 ```
 
 Call the sub-command `batchconvert` like this:

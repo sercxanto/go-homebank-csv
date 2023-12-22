@@ -203,9 +203,9 @@ func TestBatchConvertLoadFromString(t *testing.T) {
 	}
 
 	text1 := `
-name: "my name"
-inputdir: "/my/path"
-outputdir: "/my/path2"
+name: my name
+inputdir: /my/path
+outputdir: /my/path2
 filemaxagedays: 10`
 
 	err = s.LoadFromString(text1)
@@ -233,11 +233,11 @@ filemaxagedays: 10`
 	}
 
 	text2 := `
-name: "my name2"
-inputdir: "/my/path"
-outputdir: "/my/path2"
-format: "Barclaycard"
-fileglobpattern: "some glob pattern"`
+name: my name2
+inputdir: /my/path
+outputdir: /my/path2
+format: Barclaycard
+fileglobpattern: some glob pattern`
 
 	err = s.LoadFromString(text2)
 	if err != nil {
@@ -285,13 +285,13 @@ func TestSettingsLoadFromString(t *testing.T) {
 	text := `
 batchconvert:
   sets:
-  - name: "name1"
-    inputdir: "/my/path11"
-    outputdir: "/my/path12"
-  - name: "name2"
-    inputdir: "/my/path21"
-    outputdir: "/my/path22"
-    format: "Barclaycard"
+  - name: name1
+    inputdir: /my/path11
+    outputdir: /my/path12
+  - name: name2
+    inputdir: /my/path21
+    outputdir: /my/path22
+    format: Barclaycard
     fileglobpattern: "*.*"`
 
 	err = s.LoadFromString(text)
