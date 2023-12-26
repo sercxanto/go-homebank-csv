@@ -217,6 +217,184 @@ func TestFindFiles(t *testing.T) {
 	}
 }
 
+func TestBatchConvertNoSets(t *testing.T) {
+	settings := settings.BatchConvertSettings{}
+	status, err := BatchConvert(settings, time.Now(), nil, nil)
+	if err != nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+	if status != nil {
+		t.Fatalf("BatchConvert should return nil status")
+	}
+}
+
+func TestBatchConvertInvalidSet(t *testing.T) {
+	settings := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "",
+				Format:    nil,
+				InputDir:  "",
+				OutputDir: "",
+			},
+		},
+	}
+	status, err := BatchConvert(settings, time.Now(), nil, nil)
+	if err == nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+	if status != nil {
+		t.Fatalf("BatchConvert should return nil status")
+	}
+}
+
+func TestBatchConvertNonExistentOutputDir(t *testing.T) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %s", err)
+	}
+	settings := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "my name",
+				Format:    nil,
+				InputDir:  workingDir,
+				OutputDir: "/some/non-existing/dir",
+			},
+		},
+	}
+	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+}
+
+func TestBatchConvertOutputDirNotDir(t *testing.T) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %s", err)
+	}
+	tmpDir := t.TempDir()
+	// create an empty file "testfile" in tmpDir
+	testfilePath := filepath.Join(tmpDir, "testfile")
+	file, err := os.Create(testfilePath)
+	if err != nil {
+		t.Fatalf("Failed to create file: %s", err)
+	}
+	file.Close()
+	settings := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "my name",
+				Format:    nil,
+				InputDir:  workingDir,
+				OutputDir: testfilePath,
+			},
+		},
+	}
+	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+}
+
+func TestBatchConvertConversionError(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	inputDir := filepath.Join(tmpDir, "input")
+	outputDir := filepath.Join(tmpDir, "output")
+	if err := os.Mkdir(inputDir, os.ModeDir|0o700); err != nil {
+		t.Fatalf("Failed to create directory '%s'", inputDir)
+	}
+	if err := os.Mkdir(outputDir, os.ModeDir|0o700); err != nil {
+		t.Fatalf("Failed to create directory '%s'", outputDir)
+	}
+
+	// Write empty file in inputDir
+	emptyFilePath := filepath.Join(inputDir, "emptyfile")
+	var emptyFile *os.File
+	var err error
+	emptyFile, err = os.Create(emptyFilePath)
+	if err != nil {
+		t.Fatalf("Failed to create empty file: %s", err)
+	}
+	emptyFile.Close()
+
+	settings1 := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "set 1",
+				Format:    nil,
+				InputDir:  inputDir,
+				OutputDir: outputDir,
+			},
+		},
+	}
+
+	settings2 := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "set 1",
+				Format:    parser.NewSourceFormat(parser.Volksbank),
+				InputDir:  inputDir,
+				OutputDir: outputDir,
+			},
+		},
+	}
+
+	var cbStatus, status BatchStatus
+	cbUserData := 42
+	cbUpdateNr := 0
+
+	cb := func(s BatchStatus, userData interface{}) {
+		cbStatus = s
+		cbUpdateNr++
+		if userData == nil {
+			t.Fatalf("cbUserData is nil")
+		}
+		if val, ok := userData.(int); !ok || val != cbUserData {
+			t.Fatalf("cbUserData is not '%d', but '%d'", cbUserData, val)
+		}
+		if len(s) != 1 {
+			t.Fatalf("len(s) is not 1")
+		}
+		if len(s[0].Files) != 1 {
+			t.Fatalf("len(s[0].Files) is not 1, but %d (%v)", len(s[0].Files), s[0])
+		}
+		if cbUpdateNr == 1 {
+			if s[0].Files[0].Status != NotStartedYet {
+				t.Fatalf("s[0].Files[0].Status is not NotStartedYet, but '%v'", s[0].Files[0].Status)
+			}
+		}
+		if cbUpdateNr == 2 {
+			if s[0].Files[0].Status != ConversionInProgress {
+				t.Fatalf("s[0].Files[0].Status is not ConversionInProgress, but '%v'", s[0].Files[0].Status)
+			}
+		}
+		if cbUpdateNr == 3 {
+			if s[0].Files[0].Status != ConversionError {
+				t.Fatalf("s[0].Files[0].Status is not ConversionError, but '%v'", s[0].Files[0].Status)
+			}
+		}
+	}
+
+	if status, err = BatchConvert(settings1, time.Now(), cb, cbUserData); err != nil {
+		t.Fatalf("BatchConvert should not return error")
+	}
+
+	if !reflect.DeepEqual(status, cbStatus) {
+		t.Fatalf("status and cbStatus are not equal")
+	}
+
+	cbUpdateNr = 0
+	if status, err = BatchConvert(settings2, time.Now(), cb, cbUserData); err != nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+
+	if !reflect.DeepEqual(status, cbStatus) {
+		t.Fatalf("status and cbStatus are not equal")
+	}
+
+}
+
 // TestBatchConvertBasic tests a conversion of two BatchConvertSets and compares the OutputDir
 // and returned status
 func TestBatchConvertBasic(t *testing.T) {
@@ -395,7 +573,30 @@ func TestBatchConvertSkipped(t *testing.T) {
 		},
 	}
 
-	status, err := BatchConvert(settings, time.Time{}, nil, nil)
+	var status BatchStatus
+	var cbStatus BatchStatus
+	cbUserData := 42
+
+	cb := func(s BatchStatus, userData interface{}) {
+		cbStatus = s
+		if userData == nil {
+			t.Fatalf("cbUserData is nil")
+		}
+		if val, ok := userData.(int); !ok || val != cbUserData {
+			t.Fatalf("cbUserData is not '%d', but '%d'", cbUserData, val)
+		}
+		for _, set := range s {
+			for _, f := range set.Files {
+				if f.OutputFile == filepath.Join(mixedOutputDir, "Umsaetze.csv") {
+					if f.Status != Skipped {
+						t.Fatalf("Did not skip 'Umsaetze.csv'")
+					}
+				}
+			}
+		}
+	}
+
+	status, err = BatchConvert(settings, time.Time{}, cb, cbUserData)
 
 	if err != nil {
 		t.Fatalf("BatchConvert return error '%s'", err)
@@ -404,6 +605,11 @@ func TestBatchConvertSkipped(t *testing.T) {
 	if !reflect.DeepEqual(status, expectetedStatus) {
 		t.Fatalf("BatchConvert return wrong status. Status: %v, Expected: %v", status, expectetedStatus)
 	}
+
+	if !reflect.DeepEqual(status, cbStatus) {
+		t.Fatalf("BatchConvert return status and callback status do not match. Return status: %v, CB status: %v", status, cbStatus)
+	}
+
 	done, left := status[0].GetStats()
 	if done != 2 || left != 0 {
 		t.Fatalf("BatchConvert return wrong status")
