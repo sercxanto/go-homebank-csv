@@ -15,6 +15,7 @@ type barclaycardRecord struct {
 	bookingDate     time.Time
 	value           float64
 	description     string
+	payee           string
 }
 
 type barclaycardParser struct {
@@ -45,6 +46,7 @@ func isValidBarclaycardHeader(record []string) bool {
 		"Name des Karteninhabers",
 		"Kartennetzwerk",
 		"Kontaktlose Bezahlung",
+		"Händlerdetails",
 	}
 	return reflect.DeepEqual(record, expected)
 }
@@ -76,6 +78,13 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 					Field:     "Buchungsdatum(1)/Transaktionsdatum",
 				}
 			}
+
+			// Entries with an empty "Buchungsdatum" are "vorgemerkt", not "Berechnet"
+			// and need to be skipped
+			if len(row[2]) == 0 {
+				continue
+			}
+
 			bDate, err := time.Parse("02.01.2006", row[2])
 			if err != nil {
 				return &ParserError{
@@ -103,6 +112,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				bookingDate:     bDate,
 				value:           value,
 				description:     row[4],
+				payee:           row[14],
 			}
 			b.entries = append(b.entries, bRecord)
 		} else {
@@ -125,7 +135,7 @@ func (b *barclaycardRecord) convertRecord() homebankRecord {
 		date:     b.transactionDate.Format("2006-01-02"),
 		payment:  1, // Credit card
 		info:     b.description,
-		payee:    "",
+		payee:    b.payee,
 		memo:     "",
 		amount:   b.value,
 		category: "",
