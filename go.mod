@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/adrg/xdg v0.5.3
-	github.com/alecthomas/kong v0.9.0
+	github.com/alecthomas/kong v1.6.0
 	github.com/goccy/go-yaml v1.12.0
 	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/text v0.19.0
