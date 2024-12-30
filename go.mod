@@ -1,8 +1,6 @@
 module github.com/sercxanto/go-homebank-csv
 
-go 1.21.0
-
-toolchain go1.22.5
+go 1.23
 
 require (
 	github.com/adrg/xdg v0.5.3
