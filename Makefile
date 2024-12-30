@@ -11,7 +11,7 @@ doc-serve:
 	pkgsite -open
 
 install-tools:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.54.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2
 	go install golang.org/x/pkgsite/cmd/pkgsite@latest
 	go install github.com/miniscruff/changie@latest
 	go install github.com/goreleaser/goreleaser@latest
