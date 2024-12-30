@@ -20,7 +20,7 @@ lint:
 	golangci-lint run
 
 test:
-	go test -v -cover ./...
+	go test -v -cover ./internal/... ./pkg/...
 
 build:
 	go build -o bin/$(BUILD_STRING)/go-homebank-csv cmd/go-homebank-csv/main.go
