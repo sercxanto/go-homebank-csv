@@ -14,17 +14,17 @@ HomeBank is a crossplatform free and easy accounting software.
 ## Supported formats
 
 * MoneyWallet
-  * [MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is an expense manager for Android.
+    * [MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is an expense manager for Android.
 go-homebank-csv supports parsing and converting the CSV export format.
 * Barclaycard
-  * Not exactly CSV, this is the excel export format of Barclays VISA card as found on [www.barclays.de](https://www.barclays.de).
+    * Not exactly CSV, this is the excel export format of Barclays VISA card as found on [www.barclays.de](https://www.barclays.de).
 * Volksbank
-  * This is the CSV export format used by a German Volksbank. Most probably all Volksbanks have the same format.
+    * This is the CSV export format used by a German Volksbank. Most probably all Volksbanks have the same format.
 * Comdirect
-  * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
+    * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
 It has some weird encoding and the internal structure changes often.
 * DKB
-  * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
+    * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
 
 ## Usage
 
@@ -54,7 +54,7 @@ You can autoconvert a defined set of folders. To use this feature a config file 
 
 The config file is expected at the following location:
 
-```
+```text
 $XDG_CONFIG_HOME/go-homebank-csv/config.yml
 ```
 
@@ -145,7 +145,6 @@ go-homebank-csv batchconvert
 * If this is not the case convert the found files using the same base name with an extention ".csv"
   and store them at "/home/user/finance/volksbank/homebankcsv"
 
-
 ## Developer documentation
 
 ### Prerequisites
@@ -153,8 +152,8 @@ go-homebank-csv batchconvert
 This software uses [golangci-lint](https://golangci-lint.run), [pkgsite](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite),
 [changie](https://changie.dev/) and [goreleaser](https://goreleaser.com/).
 
-You can install the tools with:
-
+When using a Dev Container the tools are available by default. On the local
+machine they can be installed with:
 
 ```shell
 make install-tools
@@ -215,6 +214,7 @@ Change `minor`to the type of change:
 changie batch minor
 changie merge
 ```
+
 You may want to call the changie commands with the `--dry-run` to preview the changelog.
 
 Don't forget to commit the changes so that the workspace is clean:
