@@ -168,18 +168,18 @@ func TestDkbParseFileOnlyHeader(t *testing.T) {
 
 func TestDkbConvertRecord(t *testing.T) {
 	d := dkbRecord{
-		buchungsdatum:        time.Date(2024, 12, 13, 0, 0, 0, 0, time.UTC),
-		wertstellung:         time.Date(2024, 12, 14, 0, 0, 0, 0, time.UTC),
-		status:               "Gebucht",
-		zahlungspflichtiger1: "Name1",
-		zahlungspflichtiger2: "Name2",
-		verwendungszweck:     "Verwendungszweck",
-		umsatztyp:            "Ausgang",
-		iban:                 "DE12345678901234567890",
-		betrag_eur:           -1000.0,
-		glaeubigerId:         "DE98ZZZ09999999999",
-		mandatsreferenz:      "Mandatsreferenz",
-		kundenreferenz:       "Kundenreferenz",
+		buchungsdatum:       time.Date(2024, 12, 13, 0, 0, 0, 0, time.UTC),
+		wertstellung:        time.Date(2024, 12, 14, 0, 0, 0, 0, time.UTC),
+		status:              "Gebucht",
+		zahlungspflichtiger: "Name1",
+		zahlungsempfaenger:  "Name2",
+		verwendungszweck:    "Verwendungszweck",
+		umsatztyp:           "Ausgang",
+		iban:                "DE12345678901234567890",
+		betrag_eur:          -1000.0,
+		glaeubigerId:        "DE98ZZZ09999999999",
+		mandatsreferenz:     "Mandatsreferenz",
+		kundenreferenz:      "Kundenreferenz",
 	}
 	h := d.convertRecord()
 	if h.amount != d.betrag_eur {
@@ -191,8 +191,8 @@ func TestDkbConvertRecord(t *testing.T) {
 	if h.payment != 0 {
 		t.Errorf("Expected payment to be 0, got %d", h.payment)
 	}
-	if h.payee != d.zahlungspflichtiger2 {
-		t.Errorf("Expected payee to be '%s', got '%s'", d.zahlungspflichtiger2, h.payee)
+	if h.payee != d.zahlungsempfaenger {
+		t.Errorf("Expected payee to be '%s', got '%s'", d.zahlungsempfaenger, h.payee)
 	}
 	if h.memo != d.verwendungszweck {
 		t.Errorf("Expected memo to be '%s', got '%s'", d.verwendungszweck, h.memo)
@@ -245,7 +245,7 @@ func TestIsValidDkbHeader(t *testing.T) {
 		"Wertstellung",
 		"Status",
 		"Zahlungspflichtige*r",
-		"Zahlungspflichtige*r",
+		"Zahlungsempfänger*in",
 		"Verwendungszweck",
 		"Umsatztyp",
 		"IBAN",
@@ -260,7 +260,7 @@ func TestIsValidDkbHeader(t *testing.T) {
 		"Wertstellung",
 		"Status",
 		"Zahlungspflichtige*r",
-		"Zahlungspflichtige*r",
+		"Zahlungsempfänger*in",
 		"Verwendungszweck",
 		"Umsatztyp",
 		"IBAN",

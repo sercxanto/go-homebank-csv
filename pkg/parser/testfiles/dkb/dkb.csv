@@ -2,7 +2,7 @@
 
 "Kontostand vom 30.12.2024:";"3.600,00 €"
 ""
-"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungspflichtige*r";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
 "10.12.24";"11.12.24";"Gebucht";"Name bei anderer Bank";"Eigener Name";"GiroKonto DKB";"Eingang";"DE12345678901234567890";"1.000";"irgendeine Gläubiger-ID";"irgendeine Mandatsreferenz";"irgendeine Kundenreferenz"
 "01.10.24";"01.10.24";"Gebucht";"DKB AG";"DKB AG";"Abrechnung 30.09.2024 siehe Anlage Abrechnung 30.09.2024 Information zur Abrechnung Kontostand am 30.09.2024                                          600,00 + Abrechnungszeitraum vom 01.07.2024 bis 30.09.2024 Abrechnung 30.09.2024                                                0,00+ Sollzinssätze am 30.09.2024  9,9000 v.H. für eingeräumte Kontoüberziehung (aktuell eingeräumte Kontoüberziehung         500,00)  9,9000 v.H. für geduldete Kontoüberziehung über die eingeräumte Kontoüberziehung hinaus Kontostand/Rechnungsabschluss am 30.09.2024                       600,00 + Rechnungsnummer: 20240930-AB123-12345678901";"Eingang";"0010020034";"0";"";"";""
 "30.09.24";"30.09.24";"Gebucht";"Eigener Name";"Name bei anderer Bank";"Verwendungszweck";"Ausgang";"DE12345678901234567890";"-2.000";"irgendeine Gläubiger-ID";"irgendeine Mandatsreferenz";"irgendeine Kundenreferenz"

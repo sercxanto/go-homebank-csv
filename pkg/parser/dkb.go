@@ -7,8 +7,6 @@ Parsing rules:
 - The first lines of DKBs CSV can be skipped until the header line with the field names is found
 - Homebanks "date" field" is equivalent to DKBs "Buchungsdatum"
 - DKBs "Umsatztyp" depicts incoming ("Eingang") or outgoing ("Ausgang") transactions
-- There are two DKB fields with the name "Zahlungspflichtige*r". Only in case of outgoing transactions this field is equivalent to Homebanks "payee". In other cases parsing of this field is skipped.
-- For incoming transactions ("Umsatztyp"=Eingang) payee is left empty
 - There is a special record for "Abrechnung". It is skipped and not transferred to Homebank. It can be identified by the following values:
   "Umsatztyp"=Eingang, "Betrag"=0, both Fields "Zahlungspflichtige*r Name" are set to "DKB AG"
 */
@@ -23,18 +21,18 @@ import (
 )
 
 type dkbRecord struct {
-	buchungsdatum        time.Time
-	wertstellung         time.Time
-	status               string
-	zahlungspflichtiger1 string
-	zahlungspflichtiger2 string
-	verwendungszweck     string
-	umsatztyp            string
-	iban                 string
-	betrag_eur           float64
-	glaeubigerId         string
-	mandatsreferenz      string
-	kundenreferenz       string
+	buchungsdatum       time.Time
+	wertstellung        time.Time
+	status              string
+	zahlungspflichtiger string
+	zahlungsempfaenger  string
+	verwendungszweck    string
+	umsatztyp           string
+	iban                string
+	betrag_eur          float64
+	glaeubigerId        string
+	mandatsreferenz     string
+	kundenreferenz      string
 }
 
 type dkbParser struct {
@@ -107,20 +105,20 @@ func (p *dkbParser) ParseFile(filepath string) error {
 			}
 		}
 		dRecord := dkbRecord{
-			buchungsdatum:        parsedBuchungsdatum,
-			wertstellung:         parsedWertstellung,
-			status:               row[2],
-			zahlungspflichtiger1: row[3],
-			zahlungspflichtiger2: row[4],
-			verwendungszweck:     row[5],
-			umsatztyp:            row[6],
-			iban:                 row[7],
-			betrag_eur:           amount,
-			glaeubigerId:         row[9],
-			mandatsreferenz:      row[10],
-			kundenreferenz:       row[11],
+			buchungsdatum:       parsedBuchungsdatum,
+			wertstellung:        parsedWertstellung,
+			status:              row[2],
+			zahlungspflichtiger: row[3],
+			zahlungsempfaenger:  row[4],
+			verwendungszweck:    row[5],
+			umsatztyp:           row[6],
+			iban:                row[7],
+			betrag_eur:          amount,
+			glaeubigerId:        row[9],
+			mandatsreferenz:     row[10],
+			kundenreferenz:      row[11],
 		}
-		if dRecord.umsatztyp == "Eingang" && dRecord.betrag_eur == 0 && dRecord.zahlungspflichtiger1 == "DKB AG" && dRecord.zahlungspflichtiger2 == "DKB AG" {
+		if dRecord.umsatztyp == "Eingang" && dRecord.betrag_eur == 0 && dRecord.zahlungspflichtiger == "DKB AG" && dRecord.zahlungsempfaenger == "DKB AG" {
 			continue
 		}
 		p.entries = append(p.entries, dRecord)
@@ -155,7 +153,7 @@ func (d *dkbRecord) convertRecord() (h homebankRecord) {
 	h.payment = 0
 	h.date = d.buchungsdatum.Format("2006-01-02")
 	if d.betrag_eur < 0 {
-		h.payee = d.zahlungspflichtiger2
+		h.payee = d.zahlungsempfaenger
 	}
 	h.memo = d.verwendungszweck
 	h.amount = d.betrag_eur
@@ -168,7 +166,7 @@ func isValidDkbHeader(record []string) bool {
 		"Wertstellung",
 		"Status",
 		"Zahlungspflichtige*r",
-		"Zahlungspflichtige*r",
+		"Zahlungsempfänger*in",
 		"Verwendungszweck",
 		"Umsatztyp",
 		"IBAN",
