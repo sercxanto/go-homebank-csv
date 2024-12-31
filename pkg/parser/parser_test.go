@@ -75,6 +75,7 @@ func TestGetGuessedParser(t *testing.T) {
 		filepath.Join("testfiles", "barclaycard", "Umsaetze.xlsx"):                                Barclaycard,
 		filepath.Join("testfiles", "volksbank", "Umsaetze_DE12345678901234567890_2023.10.04.csv"): Volksbank,
 		filepath.Join("testfiles", "comdirect", "umsaetze_1234567890_20231006_1804.csv"):          Comdirect,
+		filepath.Join("testfiles", "dkb", "dkb.csv"):                                              DKB,
 	}
 
 	for testfile, format := range formats {

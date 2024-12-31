@@ -23,6 +23,8 @@ go-homebank-csv supports parsing and converting the CSV export format.
 * Comdirect
   * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
 It has some weird encoding and the internal structure changes often.
+* DKB
+  * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
 
 ## Usage
 

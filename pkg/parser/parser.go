@@ -17,6 +17,7 @@ const (
 	Barclaycard
 	Volksbank
 	Comdirect
+	DKB
 )
 
 // sourceFormats is the internal mapping between SourceFormat and its textual representation
@@ -26,6 +27,7 @@ var sourceFormats = map[SourceFormat]string{
 	Barclaycard: "Barclaycard",
 	Volksbank:   "Volksbank",
 	Comdirect:   "Comdirect",
+	DKB:         "DKB",
 }
 
 // GetParser returns a parser for the given source format
@@ -39,6 +41,8 @@ func GetParser(s SourceFormat) Parser {
 		return &volksbankParser{}
 	case Comdirect:
 		return &comdirectParser{}
+	case DKB:
+		return &dkbParser{}
 	}
 	return nil
 }
