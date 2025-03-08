@@ -31,7 +31,7 @@ type comdirectParser struct {
 }
 
 func (m *comdirectParser) ParseFile(filepath string) error {
-	const headerInRecordNr int = 2 // csvReader skips empty lines, so the header is in the third line
+	const headerInRecordNr int = 1 // csvReader skips empty lines, so the header is in the second (non-empty) line
 	m.entries = make([]comdirectRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
@@ -54,7 +54,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	if !isValidComdirectHeader(records[headerInRecordNr]) {
 		return &ParserError{
 			ErrorType: HeaderError,
-			Line:      headerInRecordNr + 2,
+			Line:      headerInRecordNr + 4,
 		}
 	}
 

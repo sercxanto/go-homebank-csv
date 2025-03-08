@@ -66,8 +66,8 @@ func TestComdirectParseFileNokInvalidHeader(t *testing.T) {
 		if pError.ErrorType != HeaderError {
 			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
 		}
-		if pError.Line != 4 {
-			t.Errorf("Expected error on line 4, got %d", pError.Line)
+		if pError.Line != 5 {
+			t.Errorf("Expected error on line 5, got %d", pError.Line)
 		}
 	} else {
 		t.Error("ParserError expected")
