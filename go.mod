@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/adrg/xdg v0.5.3
 	github.com/alecthomas/kong v1.8.1
-	github.com/goccy/go-yaml v1.15.23
+	github.com/goccy/go-yaml v1.16.0
 	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/text v0.22.0
 )
