@@ -2,7 +2,7 @@ module github.com/sercxanto/go-homebank-csv
 
 go 1.23.0
 
-toolchain go1.24.1
+toolchain go1.23
 
 require (
 	github.com/adrg/xdg v0.5.3
