@@ -40,8 +40,6 @@ type dkbParser struct {
 }
 
 func (p *dkbParser) ParseFile(filepath string) error {
-	const headerInRecordNr int = 3 // csvReader skips completely empty lines, so the header is in the third line
-	const lineNrOffset int = 6     // line number offset for error messages
 	p.entries = make([]dkbRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
@@ -59,18 +57,21 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	if err != nil {
 		return &ParserError{ErrorType: IOError}
 	}
-	if len(records) < headerInRecordNr+1 {
-		return &ParserError{ErrorType: HeaderError}
-	}
 
-	if !isValidDkbHeader(records[headerInRecordNr]) {
-		return &ParserError{
-			ErrorType: HeaderError,
-			Line:      headerInRecordNr + 2,
+	var headerIndex int = -1
+	for i, record := range records {
+		if isValidDkbHeader(record) {
+			headerIndex = i
+			break
 		}
 	}
 
-	for lineNr, row := range records[headerInRecordNr+1:] {
+	if headerIndex == -1 {
+		return &ParserError{ErrorType: HeaderError}
+	}
+
+	for lineNr, row := range records[headerIndex+1:] {
+		nonEmptyLineNr := headerIndex + lineNr + 2
 		if len(row) != 12 {
 			continue
 		}
@@ -81,7 +82,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNrOffset + lineNr,
+				Line:      nonEmptyLineNr,
 				Field:     "Buchungsdatum",
 			}
 		}
@@ -89,7 +90,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNrOffset + lineNr,
+				Line:      nonEmptyLineNr,
 				Field:     "Wertstellung",
 			}
 		}
@@ -100,7 +101,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNrOffset + lineNr,
+				Line:      nonEmptyLineNr,
 				Field:     "Betrag (€)",
 			}
 		}

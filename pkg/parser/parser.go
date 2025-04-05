@@ -110,7 +110,8 @@ type ParserError struct {
 	ErrorType ParserErrorType
 
 	// Optional line number where the error occurs. Line numbers are
-	// 1 based. The value "0" means no line number applies here.
+	// 1 based. The value "0" means no line number applies here, e.g.
+	// when no header has been found. Empty lines are not counted.
 	Line int
 
 	// Optional field name where the error occured

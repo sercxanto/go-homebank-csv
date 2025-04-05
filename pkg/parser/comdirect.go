@@ -31,7 +31,6 @@ type comdirectParser struct {
 }
 
 func (m *comdirectParser) ParseFile(filepath string) error {
-	const headerInRecordNr int = 1 // csvReader skips empty lines, so the header is in the second (non-empty) line
 	m.entries = make([]comdirectRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
@@ -47,18 +46,20 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	if err != nil {
 		return &ParserError{ErrorType: IOError}
 	}
-	if len(records) < headerInRecordNr+1 {
-		return &ParserError{ErrorType: HeaderError}
-	}
 
-	if !isValidComdirectHeader(records[headerInRecordNr]) {
-		return &ParserError{
-			ErrorType: HeaderError,
-			Line:      headerInRecordNr + 4,
+	var headerIndex int = -1
+	for i, record := range records {
+		if isValidComdirectHeader(record) {
+			headerIndex = i
+			break
 		}
 	}
 
-	for lineNr, row := range records[headerInRecordNr+1:] {
+	if headerIndex == -1 {
+		return &ParserError{ErrorType: HeaderError}
+	}
+
+	for lineNr, row := range records[headerIndex+1:] {
 		if len(row) != 6 {
 			continue
 		}
@@ -69,7 +70,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 6,
+				Line:      lineNr + headerIndex + 2,
 				Field:     "Buchungstag",
 			}
 		}
@@ -80,7 +81,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 6,
+				Line:      lineNr + headerIndex + 2,
 				Field:     "Umsatz in EUR",
 			}
 		}
