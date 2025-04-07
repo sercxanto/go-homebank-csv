@@ -2,14 +2,12 @@ module github.com/sercxanto/go-homebank-csv
 
 go 1.23.0
 
-toolchain go1.23
-
 require (
 	github.com/adrg/xdg v0.5.3
 	github.com/alecthomas/kong v1.10.0
 	github.com/goccy/go-yaml v1.17.1
 	github.com/xuri/excelize/v2 v2.9.0
-	golang.org/x/text v0.23.0
+	golang.org/x/text v0.24.0
 )
 
 require (
