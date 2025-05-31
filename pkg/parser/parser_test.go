@@ -80,7 +80,10 @@ func TestGetGuessedParser(t *testing.T) {
 
 	for testfile, format := range formats {
 		p := GetGuessedParser(testfile)
-		if p.GetFormat() != format {
+		if p == nil {
+			t.Errorf("Parser not found for file: %s", testfile)
+		}
+		if p != nil && p.GetFormat() != format {
 			t.Errorf("Parser not correct, expected: %s, got: %s", format, p.GetFormat())
 		}
 	}

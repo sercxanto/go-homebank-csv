@@ -201,8 +201,7 @@ func TestIsValidVolksbankHeader(t *testing.T) {
 		"Waehrung",
 		"Saldo nach Buchung",
 		"Bemerkung",
-		"Kategorie",
-		"Steuerrelevant",
+		"Gekennzeichneter Umsatz",
 		"Glaeubiger ID",
 		"Mandatsreferenz",
 	}
