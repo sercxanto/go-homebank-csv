@@ -121,8 +121,7 @@ func isValidVolksbankHeader(record []string) bool {
 		"Waehrung",
 		"Saldo nach Buchung",
 		"Bemerkung",
-		"Kategorie",
-		"Steuerrelevant",
+		"Gekennzeichneter Umsatz",
 		"Glaeubiger ID",
 		"Mandatsreferenz",
 	}
