@@ -58,7 +58,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		return &ParserError{ErrorType: IOError}
 	}
 
-	var headerIndex int = -1
+	var headerIndex = -1
 	for i, record := range records {
 		if isValidDkbHeader(record) {
 			headerIndex = i
@@ -94,8 +94,8 @@ func (p *dkbParser) ParseFile(filepath string) error {
 				Field:     "Wertstellung",
 			}
 		}
-		amountString := strings.Replace(row[8], ".", "", -1)
-		amountString = strings.Replace(amountString, ",", ".", -1)
+		amountString := strings.ReplaceAll(row[8], ".", "")
+		amountString = strings.ReplaceAll(amountString, ",", ".")
 		var amount float64
 		amount, err = strconv.ParseFloat(amountString, 64)
 		if err != nil {

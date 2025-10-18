@@ -59,7 +59,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 			}
 		}
 
-		moneyString := strings.Replace(row[4], ",", ".", -1)
+		moneyString := strings.ReplaceAll(row[4], ",", ".")
 		var money float64
 		money, err = strconv.ParseFloat(strings.TrimSpace(moneyString), 64)
 		if err != nil {

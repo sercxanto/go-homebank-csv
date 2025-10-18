@@ -96,7 +96,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 
 			var value float64
 			// Format in excel export is "3,14 €"
-			valueString := strings.Replace(row[3], ",", ".", -1)
+			valueString := strings.ReplaceAll(row[3], ",", ".")
 			valueString = strings.TrimRight(valueString, "€")
 			value, err = strconv.ParseFloat(strings.TrimSpace(valueString), 64)
 			if err != nil {

@@ -1,8 +1,27 @@
-issues:
-  exclude-rules:
-    - linters:
+version: "2"
+linters:
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
         - staticcheck
       # SA5008 disabled as kong tags are not detected correctly (multiple use of "type")
       # Staticcheck is run as library inside golangci-lint and does not support in-file
       # directives, so disable it globally on golangci-lint level
-      text: "SA5008:"
+        text: 'SA5008:'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

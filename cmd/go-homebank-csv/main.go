@@ -43,7 +43,7 @@ func (c *ConvertCmd) Run() error {
 	if c.Format == nil {
 		p = parser.GetGuessedParser(c.Infile)
 		if p == nil {
-			return fmt.Errorf("Cannot deduce format for file '%s'", c.Infile)
+			return fmt.Errorf("cannot deduce format for file '%s'", c.Infile)
 		}
 		fmt.Printf("Detected format '%s'\n", p.GetFormat())
 	} else {
@@ -67,7 +67,7 @@ func (c *BatchConvertCmd) Run() error {
 		return s.CheckValidity()
 	}
 	if len(s.BatchConvert.Sets) == 0 {
-		return errors.New("No batchconvert sets defined in config file")
+		return errors.New("no batchconvert sets defined in config file")
 	}
 	fmt.Println("Found", len(s.BatchConvert.Sets), "sets:")
 	for _, set := range s.BatchConvert.Sets {
@@ -90,13 +90,14 @@ func (c *BatchConvertCmd) Run() error {
 				}
 				fileStatus[f.InputFile] = f.Status
 				if changed {
-					if f.Status == batchconvert.ConversionInProgress {
+					switch f.Status {
+					case batchconvert.ConversionInProgress:
 						fmt.Println("  In Progress:", f.InputFile)
-					} else if f.Status == batchconvert.ConversionSuccess {
+					case batchconvert.ConversionSuccess:
 						fmt.Println("  Success:", f.InputFile)
-					} else if f.Status == batchconvert.ConversionError {
+					case batchconvert.ConversionError:
 						fmt.Println("  Failed:", f.InputFile)
-					} else if f.Status == batchconvert.Skipped {
+					case batchconvert.Skipped:
 						fmt.Println("  Skipped:", f.InputFile)
 					}
 				}
