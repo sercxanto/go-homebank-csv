@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -40,6 +41,13 @@ func copyFile(src string, dst string) error {
 		_, err = io.Copy(dstFile, srcFile)
 		return err
 	}
+}
+
+func normalizeExpectedPath(path string) string {
+	if path == "" {
+		return ""
+	}
+	return filepath.Clean(filepath.FromSlash(path))
 }
 
 func TestLoadFromDefaultFile(t *testing.T) {
@@ -216,11 +224,11 @@ filemaxagedays: 10`
 	if s.Name != "my name" {
 		t.Errorf("Expected 'my name', got '%s' instead", s.Name)
 	}
-	if s.InputDir != "/my/path" {
-		t.Errorf("Expected '/my/path', got '%s' instead", s.InputDir)
+	if s.InputDir != normalizeExpectedPath("/my/path") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path"), s.InputDir)
 	}
-	if s.OutputDir != "/my/path2" {
-		t.Errorf("Expected '/my/path2', got '%s' instead", s.OutputDir)
+	if s.OutputDir != normalizeExpectedPath("/my/path2") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path2"), s.OutputDir)
 	}
 	if s.Format != nil {
 		t.Errorf("Expected nil, got '%s' instead", s.Format)
@@ -246,11 +254,11 @@ fileglobpattern: some glob pattern`
 	if s.Name != "my name2" {
 		t.Errorf("Expected 'my name', got '%s' instead", s.Name)
 	}
-	if s.InputDir != "/my/path" {
-		t.Errorf("Expected '/my/path', got '%s' instead", s.InputDir)
+	if s.InputDir != normalizeExpectedPath("/my/path") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path"), s.InputDir)
 	}
-	if s.OutputDir != "/my/path2" {
-		t.Errorf("Expected '/my/path2', got '%s' instead", s.OutputDir)
+	if s.OutputDir != normalizeExpectedPath("/my/path2") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path2"), s.OutputDir)
 	}
 	if *(s.Format) != parser.Barclaycard {
 		t.Errorf("Expected 'Barclaycard', got '%s' instead", (*s.Format))
@@ -304,11 +312,11 @@ batchconvert:
 	if s.BatchConvert.Sets[0].Name != "name1" {
 		t.Errorf("Expected 'name1', got '%s' instead", s.BatchConvert.Sets[0].Name)
 	}
-	if s.BatchConvert.Sets[0].InputDir != "/my/path11" {
-		t.Errorf("Expected '/my/path11', got '%s' instead", s.BatchConvert.Sets[0].InputDir)
+	if s.BatchConvert.Sets[0].InputDir != normalizeExpectedPath("/my/path11") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path11"), s.BatchConvert.Sets[0].InputDir)
 	}
-	if s.BatchConvert.Sets[0].OutputDir != "/my/path12" {
-		t.Errorf("Expected '/my/path12', got '%s' instead", s.BatchConvert.Sets[0].OutputDir)
+	if s.BatchConvert.Sets[0].OutputDir != normalizeExpectedPath("/my/path12") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path12"), s.BatchConvert.Sets[0].OutputDir)
 	}
 	if s.BatchConvert.Sets[0].Format != nil {
 		t.Errorf("Expected 'nil', got '%s' instead", *(s.BatchConvert.Sets[0].Format))
@@ -322,11 +330,11 @@ batchconvert:
 	if s.BatchConvert.Sets[1].Name != "name2" {
 		t.Errorf("Expected 'name2', got '%s' instead", s.BatchConvert.Sets[1].Name)
 	}
-	if s.BatchConvert.Sets[1].InputDir != "/my/path21" {
-		t.Errorf("Expected '/my/path21', got '%s' instead", s.BatchConvert.Sets[1].InputDir)
+	if s.BatchConvert.Sets[1].InputDir != normalizeExpectedPath("/my/path21") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path21"), s.BatchConvert.Sets[1].InputDir)
 	}
-	if s.BatchConvert.Sets[1].OutputDir != "/my/path22" {
-		t.Errorf("Expected '/my/path22', got '%s' instead", s.BatchConvert.Sets[1].OutputDir)
+	if s.BatchConvert.Sets[1].OutputDir != normalizeExpectedPath("/my/path22") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path22"), s.BatchConvert.Sets[1].OutputDir)
 	}
 	if s.BatchConvert.Sets[1].Format == nil {
 		t.Errorf("Expected 'non-nil', got '%s' instead", *(s.BatchConvert.Sets[1].Format))
@@ -369,11 +377,11 @@ func TestSettingsLoadFromFile(t *testing.T) {
 	if s.BatchConvert.Sets[0].Name != "name1" {
 		t.Errorf("Expected 'name1', got '%s' instead", s.BatchConvert.Sets[0].Name)
 	}
-	if s.BatchConvert.Sets[0].InputDir != "/my/path11" {
-		t.Errorf("Expected '/my/path11', got '%s' instead", s.BatchConvert.Sets[0].InputDir)
+	if s.BatchConvert.Sets[0].InputDir != normalizeExpectedPath("/my/path11") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path11"), s.BatchConvert.Sets[0].InputDir)
 	}
-	if s.BatchConvert.Sets[0].OutputDir != "/my/path12" {
-		t.Errorf("Expected '/my/path12', got '%s' instead", s.BatchConvert.Sets[0].OutputDir)
+	if s.BatchConvert.Sets[0].OutputDir != normalizeExpectedPath("/my/path12") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path12"), s.BatchConvert.Sets[0].OutputDir)
 	}
 	if s.BatchConvert.Sets[0].Format == nil {
 		t.Fatalf("Expected 'non-nil', got 'non-nil' instead")
@@ -390,11 +398,11 @@ func TestSettingsLoadFromFile(t *testing.T) {
 	if s.BatchConvert.Sets[1].Name != "name2" {
 		t.Errorf("Expected 'name2', got '%s' instead", s.BatchConvert.Sets[1].Name)
 	}
-	if s.BatchConvert.Sets[1].InputDir != "/my/path21" {
-		t.Errorf("Expected '/my/path21', got '%s' instead", s.BatchConvert.Sets[1].InputDir)
+	if s.BatchConvert.Sets[1].InputDir != normalizeExpectedPath("/my/path21") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path21"), s.BatchConvert.Sets[1].InputDir)
 	}
-	if s.BatchConvert.Sets[1].OutputDir != "/my/path22" {
-		t.Errorf("Expected '/my/path22', got '%s' instead", s.BatchConvert.Sets[1].OutputDir)
+	if s.BatchConvert.Sets[1].OutputDir != normalizeExpectedPath("/my/path22") {
+		t.Errorf("Expected '%s', got '%s' instead", normalizeExpectedPath("/my/path22"), s.BatchConvert.Sets[1].OutputDir)
 	}
 	if s.BatchConvert.Sets[1].Format != nil {
 		t.Fatal("Expected 'nil', got 'non-nil' instead")
@@ -411,4 +419,75 @@ func TestSettingsLoadFromFile(t *testing.T) {
 		t.Errorf("Expected no error, got '%s' instead", err)
 	}
 
+}
+
+func TestNormalizePathsSupportsShortcuts(t *testing.T) {
+	baseDir := t.TempDir()
+	if runtime.GOOS == "windows" {
+		// Under Windows setting USERPROFILE is not enough for
+		// the xdg package, so we use the default home directory instead of
+		// a tmpdir.
+		xdg.Reload()
+		if xdg.Home == "" {
+			t.Fatal("xdg home directory not available on Windows")
+		}
+		baseDir = xdg.Home
+	} else {
+		t.Setenv("HOME", baseDir)
+	}
+	t.Cleanup(func() {
+		xdg.Reload()
+	})
+	docsDir := filepath.Join(baseDir, "MyDocs")
+	downloadsDir := filepath.Join(baseDir, "MyDownloads")
+	desktopDir := filepath.Join(baseDir, "MyDesktop")
+	t.Setenv("XDG_DOCUMENTS_DIR", docsDir)
+	t.Setenv("XDG_DOWNLOAD_DIR", downloadsDir)
+	t.Setenv("XDG_DESKTOP_DIR", desktopDir)
+
+	xdg.Reload()
+
+	set := BatchConvertSet{
+		Name:      "shortcuts",
+		InputDir:  "~/projects",
+		OutputDir: "xdg:documents/finances",
+	}
+
+	if err := set.NormalizePaths(); err != nil {
+		t.Fatalf("NormalizePaths returned error: %v", err)
+	}
+
+	expectedInput := filepath.Join(baseDir, "projects")
+	if set.InputDir != expectedInput {
+		t.Errorf("Expected input dir '%s', got '%s'", expectedInput, set.InputDir)
+	}
+
+	expectedOutput := filepath.Join(baseDir, "MyDocs", "finances")
+	if set.OutputDir != expectedOutput {
+		t.Errorf("Expected output dir '%s', got '%s'", expectedOutput, set.OutputDir)
+	}
+
+	downloads, err := expandPath("xdg:downloads")
+	if err != nil {
+		t.Fatalf("expandPath xdg:downloads returned error: %v", err)
+	}
+	if downloads != downloadsDir {
+		t.Errorf("Expected downloads dir '%s', got '%s'", downloadsDir, downloads)
+	}
+
+	desktop, err := expandPath("xdg:desktop")
+	if err != nil {
+		t.Fatalf("expandPath xdg:desktop returned error: %v", err)
+	}
+	if desktop != desktopDir {
+		t.Errorf("Expected desktop dir '%s', got '%s'", desktopDir, desktop)
+	}
+
+	if _, err := expandPath("xdg:unknown"); err == nil {
+		t.Error("Expected error for unknown xdg shortcut")
+	}
+
+	if _, err := expandPath("~someone"); err == nil {
+		t.Error("Expected error for unsupported home shortcut")
+	}
 }

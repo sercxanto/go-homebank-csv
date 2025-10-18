@@ -105,6 +105,19 @@ The additional fields have the following meaning:
 * `format`: Specify the exact format to be expected. If not given an probably error-prone and time-consuming
    autodetection is done.
 
+##### Portable paths
+
+Paths inside the config file can use a small set of shortcuts so that the same configuration works on
+different machines:
+
+* Prefix with `~` to expand to the current user's home directory (for example `~/finance/inbox`).
+* Use `xdg:documents` or `xdg:documents/...` for the per-user documents directory.
+* Use `xdg:downloads` or `xdg:downloads/...` for the per-user downloads directory.
+* Use `xdg:desktop` or `xdg:desktop/...` for the per-user desktop directory.
+
+These shortcuts rely on the platform specific resolution provided by [`adrg/xdg`](https://pkg.go.dev/github.com/adrg/xdg)
+and no other environment variables are expanded.
+
 #### Command line example
 
 With a config file like this:
@@ -119,8 +132,8 @@ batchconvert:
     filemaxagedays: 3
     format: Barclaycard
   - name: Bank 2
-    inputdir: /home/user/finance/volksbank/csv
-    outputdir: /home/user/finance/volksbank/homebankcsv
+    inputdir: ~/finance/volksbank/csv
+    outputdir: ~/finance/volksbank/homebankcsv
     fileglobpattern: "*.csv"
     filemaxagedays: 2
     format: Volksbank
@@ -144,95 +157,3 @@ go-homebank-csv batchconvert
 * Check if a file with the same basename is already at "/home/user/finance/volksbank/homebankcsv"
 * If this is not the case convert the found files using the same base name with an extention ".csv"
   and store them at "/home/user/finance/volksbank/homebankcsv"
-
-## Developer documentation
-
-### Prerequisites
-
-This software uses [golangci-lint](https://golangci-lint.run), [pkgsite](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite),
-[changie](https://changie.dev/) and [goreleaser](https://goreleaser.com/).
-
-When using a Dev Container the tools are available by default. On the local
-machine they can be installed with:
-
-```shell
-make install-tools
-```
-
-### Run tools locally
-
-To lint, test and build the code run `make all` or simply `make` as `all` is the default make target:
-
-```shell
-make
-```
-
-The single actions also have their own make targets:
-
-```shell
-make lint
-make test
-make build
-```
-
-To show the documentation with `pkgsite` `doc-server` can be used:
-
-```shell
-make doc-serve
-```
-
-It starts a server in the foreground and opens a webbrowser.
-
-### Start with a new change
-
-Call `changie new`:
-
-```shell
-changie new
-```
-
-This will ask for the kind of change and create a new file in `./changes/unreleased`.
-
-### Create new release
-
-The release process consists of the following steps:
-
-1. Create changelog locally
-2. Test goreleaser locally
-3. Tag the release locally and trigger goreleaser on Github CI
-
-#### Create changelog locally
-
-`changie batch` collects unreleased changes info from `./changes/unreleased` and creates a
-new version file like `./changes/v1.2.3.md`.
-
-`changie merge` collects version files from the `./changes` folder and updates `CHANGELOG.md`.
-
-Change `minor`to the type of change:
-
-```shell
-changie batch minor
-changie merge
-```
-
-You may want to call the changie commands with the `--dry-run` to preview the changelog.
-
-Don't forget to commit the changes so that the workspace is clean:
-
-```shell
-git add .
-git commit -m "Prepare release $(changie latest)"
-```
-
-#### Test goreleaser locally
-
-```shell
-goreleaser release --snapshot --clean --release-notes .changes/$(changie latest).md
-```
-
-#### Tag the release locally and trigger goreleaser on Github CI
-
-```shell
-git tag $(changie latest)
-git push origin main && git push --tags
-```

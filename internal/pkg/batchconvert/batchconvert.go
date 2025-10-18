@@ -127,6 +127,10 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		return nil, nil
 	}
 
+	if err := s.Sets.NormalizePaths(); err != nil {
+		return nil, err
+	}
+
 	if err := s.Sets.CheckValidity(); err != nil {
 		return nil, err
 	}
