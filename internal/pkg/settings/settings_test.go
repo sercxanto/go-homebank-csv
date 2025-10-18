@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -416,25 +415,13 @@ func TestSettingsLoadFromFile(t *testing.T) {
 
 func TestNormalizePathsSupportsShortcuts(t *testing.T) {
 	tmpDir := t.TempDir()
-	configHome := filepath.Join(tmpDir, ".config")
-	userDirsFile := filepath.Join(configHome, "user-dirs.dirs")
-	if err := os.MkdirAll(configHome, 0o755); err != nil {
-		t.Fatalf("Failed to create config directory '%s': %v", configHome, err)
-	}
-	userDirsContent := strings.Join([]string{
-		`XDG_DOCUMENTS_DIR="$HOME/MyDocs"`,
-		`XDG_DOWNLOAD_DIR="$HOME/MyDownloads"`,
-	}, "\n")
-	if err := os.WriteFile(userDirsFile, []byte(userDirsContent), 0o644); err != nil {
-		t.Fatalf("Failed to write user-dirs config: %v", err)
-	}
-
 	t.Cleanup(func() {
 		xdg.Reload()
 	})
 	t.Setenv("HOME", tmpDir)
 	t.Setenv("USERPROFILE", tmpDir)
-	t.Setenv("XDG_CONFIG_HOME", configHome)
+	t.Setenv("XDG_DOCUMENTS_DIR", "$HOME/MyDocs")
+	t.Setenv("XDG_DOWNLOAD_DIR", "$HOME/MyDownloads")
 
 	xdg.Reload()
 
