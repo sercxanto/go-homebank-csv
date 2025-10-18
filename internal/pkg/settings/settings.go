@@ -291,6 +291,11 @@ func xdgDirForToken(token string) (string, error) {
 			return dir, nil
 		}
 		return "", fmt.Errorf("xdg downloads directory not found")
+	case "desktop":
+		if dir := xdg.UserDirs.Desktop; dir != "" {
+			return dir, nil
+		}
+		return "", fmt.Errorf("xdg desktop directory not found")
 	default:
 		return "", fmt.Errorf("unknown xdg shortcut '%s'", token)
 	}

@@ -113,6 +113,7 @@ different machines:
 * Prefix with `~` to expand to the current user's home directory (for example `~/finance/inbox`).
 * Use `xdg:documents` or `xdg:documents/...` for the per-user documents directory.
 * Use `xdg:downloads` or `xdg:downloads/...` for the per-user downloads directory.
+* Use `xdg:desktop` or `xdg:desktop/...` for the per-user desktop directory.
 
 These shortcuts rely on the platform specific resolution provided by [`adrg/xdg`](https://pkg.go.dev/github.com/adrg/xdg)
 and no other environment variables are expanded.
