@@ -105,6 +105,18 @@ The additional fields have the following meaning:
 * `format`: Specify the exact format to be expected. If not given an probably error-prone and time-consuming
    autodetection is done.
 
+##### Portable paths
+
+Paths inside the config file can use a small set of shortcuts so that the same configuration works on
+different machines:
+
+* Prefix with `~` to expand to the current user's home directory (for example `~/finance/inbox`).
+* Use `xdg:documents` or `xdg:documents/...` for the per-user documents directory.
+* Use `xdg:downloads` or `xdg:downloads/...` for the per-user downloads directory.
+
+These shortcuts rely on the platform specific resolution provided by [`adrg/xdg`](https://pkg.go.dev/github.com/adrg/xdg)
+and no other environment variables are expanded.
+
 #### Command line example
 
 With a config file like this:
@@ -119,8 +131,8 @@ batchconvert:
     filemaxagedays: 3
     format: Barclaycard
   - name: Bank 2
-    inputdir: /home/user/finance/volksbank/csv
-    outputdir: /home/user/finance/volksbank/homebankcsv
+    inputdir: ~/finance/volksbank/csv
+    outputdir: ~/finance/volksbank/homebankcsv
     fileglobpattern: "*.csv"
     filemaxagedays: 2
     format: Volksbank

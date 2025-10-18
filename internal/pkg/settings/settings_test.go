@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -411,4 +412,66 @@ func TestSettingsLoadFromFile(t *testing.T) {
 		t.Errorf("Expected no error, got '%s' instead", err)
 	}
 
+}
+
+func TestNormalizePathsSupportsShortcuts(t *testing.T) {
+	tmpDir := t.TempDir()
+	configHome := filepath.Join(tmpDir, ".config")
+	userDirsFile := filepath.Join(configHome, "user-dirs.dirs")
+	if err := os.MkdirAll(configHome, 0o755); err != nil {
+		t.Fatalf("Failed to create config directory '%s': %v", configHome, err)
+	}
+	userDirsContent := strings.Join([]string{
+		`XDG_DOCUMENTS_DIR="$HOME/MyDocs"`,
+		`XDG_DOWNLOAD_DIR="$HOME/MyDownloads"`,
+	}, "\n")
+	if err := os.WriteFile(userDirsFile, []byte(userDirsContent), 0o644); err != nil {
+		t.Fatalf("Failed to write user-dirs config: %v", err)
+	}
+
+	t.Cleanup(func() {
+		xdg.Reload()
+	})
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("USERPROFILE", tmpDir)
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+
+	xdg.Reload()
+
+	set := BatchConvertSet{
+		Name:      "shortcuts",
+		InputDir:  "~/projects",
+		OutputDir: "xdg:documents/finances",
+	}
+
+	if err := set.NormalizePaths(); err != nil {
+		t.Fatalf("NormalizePaths returned error: %v", err)
+	}
+
+	expectedInput := filepath.Join(tmpDir, "projects")
+	if set.InputDir != expectedInput {
+		t.Errorf("Expected input dir '%s', got '%s'", expectedInput, set.InputDir)
+	}
+
+	expectedOutput := filepath.Join(tmpDir, "MyDocs", "finances")
+	if set.OutputDir != expectedOutput {
+		t.Errorf("Expected output dir '%s', got '%s'", expectedOutput, set.OutputDir)
+	}
+
+	downloads, err := expandPath("xdg:downloads")
+	if err != nil {
+		t.Fatalf("expandPath xdg:downloads returned error: %v", err)
+	}
+	expectedDownloads := filepath.Join(tmpDir, "MyDownloads")
+	if downloads != expectedDownloads {
+		t.Errorf("Expected downloads dir '%s', got '%s'", expectedDownloads, downloads)
+	}
+
+	if _, err := expandPath("xdg:unknown"); err == nil {
+		t.Error("Expected error for unknown xdg shortcut")
+	}
+
+	if _, err := expandPath("~someone"); err == nil {
+		t.Error("Expected error for unsupported home shortcut")
+	}
 }
