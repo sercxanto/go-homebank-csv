@@ -47,7 +47,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		return &ParserError{ErrorType: IOError}
 	}
 
-	var headerIndex int = -1
+	var headerIndex = -1
 	for i, record := range records {
 		if isValidComdirectHeader(record) {
 			headerIndex = i
@@ -74,8 +74,8 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 				Field:     "Buchungstag",
 			}
 		}
-		umsatzString := strings.Replace(row[4], ".", "", -1)
-		umsatzString = strings.Replace(umsatzString, ",", ".", -1)
+		umsatzString := strings.ReplaceAll(row[4], ".", "")
+		umsatzString = strings.ReplaceAll(umsatzString, ",", ".")
 		var umsatz float64
 		umsatz, err = strconv.ParseFloat(umsatzString, 64)
 		if err != nil {

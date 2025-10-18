@@ -59,7 +59,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 				Field:     "Buchungstag",
 			}
 		}
-		betragString := strings.Replace(row[11], ",", ".", -1)
+		betragString := strings.ReplaceAll(row[11], ",", ".")
 		var betrag float64
 		betrag, err = strconv.ParseFloat(betragString, 64)
 		if err != nil {
