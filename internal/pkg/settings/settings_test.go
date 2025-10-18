@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -421,15 +420,12 @@ func TestNormalizePathsSupportsShortcuts(t *testing.T) {
 	})
 	t.Setenv("HOME", tmpDir)
 	t.Setenv("USERPROFILE", tmpDir)
-	if runtime.GOOS == "windows" {
-		t.Setenv("XDG_DOCUMENTS_DIR", `%USERPROFILE%\\MyDocs`)
-		t.Setenv("XDG_DOWNLOAD_DIR", `%USERPROFILE%\\MyDownloads`)
-		t.Setenv("XDG_DESKTOP_DIR", `%USERPROFILE%\\MyDesktop`)
-	} else {
-		t.Setenv("XDG_DOCUMENTS_DIR", "$HOME/MyDocs")
-		t.Setenv("XDG_DOWNLOAD_DIR", "$HOME/MyDownloads")
-		t.Setenv("XDG_DESKTOP_DIR", "$HOME/MyDesktop")
-	}
+	docsDir := filepath.Join(tmpDir, "MyDocs")
+	downloadsDir := filepath.Join(tmpDir, "MyDownloads")
+	desktopDir := filepath.Join(tmpDir, "MyDesktop")
+	t.Setenv("XDG_DOCUMENTS_DIR", docsDir)
+	t.Setenv("XDG_DOWNLOAD_DIR", downloadsDir)
+	t.Setenv("XDG_DESKTOP_DIR", desktopDir)
 
 	xdg.Reload()
 
@@ -457,18 +453,16 @@ func TestNormalizePathsSupportsShortcuts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expandPath xdg:downloads returned error: %v", err)
 	}
-	expectedDownloads := filepath.Join(tmpDir, "MyDownloads")
-	if downloads != expectedDownloads {
-		t.Errorf("Expected downloads dir '%s', got '%s'", expectedDownloads, downloads)
+	if downloads != downloadsDir {
+		t.Errorf("Expected downloads dir '%s', got '%s'", downloadsDir, downloads)
 	}
 
 	desktop, err := expandPath("xdg:desktop")
 	if err != nil {
 		t.Fatalf("expandPath xdg:desktop returned error: %v", err)
 	}
-	expectedDesktop := filepath.Join(tmpDir, "MyDesktop")
-	if desktop != expectedDesktop {
-		t.Errorf("Expected desktop dir '%s', got '%s'", expectedDesktop, desktop)
+	if desktop != desktopDir {
+		t.Errorf("Expected desktop dir '%s', got '%s'", desktopDir, desktop)
 	}
 
 	if _, err := expandPath("xdg:unknown"); err == nil {
