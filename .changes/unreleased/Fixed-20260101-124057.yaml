@@ -1,0 +1,3 @@
+kind: Fixed
+body: Adapt volksbank format to presence of Byte-Order-Mark (BOM)
+time: 2026-01-01T12:40:57.529720673Z
