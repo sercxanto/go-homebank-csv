@@ -18,6 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 )
 
 type dkbRecord struct {
@@ -47,12 +50,10 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	}
 	defer infile.Close()
 
-	csvReader := csv.NewReader(infile)
+	bomStripped := transform.NewReader(infile, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
+	csvReader := csv.NewReader(bomStripped)
 	csvReader.Comma = ';'
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
-	// Workaround for UTF-8 Byte Order Mark (BOM) not supported by csv reader
-	// see https://github.com/golang/go/issues/33887
-	csvReader.LazyQuotes = true
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return &ParserError{ErrorType: IOError}

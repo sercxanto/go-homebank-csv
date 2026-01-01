@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 )
 
 // Single record of volksbank data, all data is stored as quoted string in the CSV file
@@ -28,7 +31,8 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 		return &ParserError{ErrorType: IOError}
 	}
 	defer infile.Close()
-	csvReader := csv.NewReader(infile)
+	bomStripped := transform.NewReader(infile, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
+	csvReader := csv.NewReader(bomStripped)
 	csvReader.Comma = ';'
 	records, err := csvReader.ReadAll()
 	if err != nil {
