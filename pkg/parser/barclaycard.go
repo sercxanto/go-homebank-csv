@@ -43,10 +43,10 @@ func isValidBarclaycardHeader(record []string) bool {
 		"Originalbetrag",
 		"Mögliche Zahlpläne",
 		"Land",
-		"Name des Karteninhabers",
+		"Karteninhaber",
 		"Kartennetzwerk",
 		"Kontaktlose Bezahlung",
-		"Händlerdetails",
+		"Details",
 	}
 	return reflect.DeepEqual(record, expected)
 }
@@ -111,8 +111,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				transactionDate: tDate,
 				bookingDate:     bDate,
 				value:           value,
-				description:     row[4],
-				payee:           row[14],
+				description:     row[14],
 			}
 			b.entries = append(b.entries, bRecord)
 		} else {
