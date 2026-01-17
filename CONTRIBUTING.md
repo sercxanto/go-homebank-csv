@@ -14,7 +14,8 @@ make install-tools
 
 ## Run tools locally
 
-To lint, test and build the code run `make all` or simply `make` as `all` is the default make target:
+To lint, test and build the code run `make all` or simply `make` as `all` is the
+default make target:
 
 ```shell
 make
@@ -56,8 +57,8 @@ The release process consists of the following steps:
 
 ### Create changelog locally
 
-`changie batch` collects unreleased changes info from `./changes/unreleased` and creates a
-new version file like `./changes/v1.2.3.md`.
+`changie batch` collects unreleased changes info from `./changes/unreleased` and
+creates a new version file like `./changes/v1.2.3.md`.
 
 `changie merge` collects version files from the `./changes` folder and updates `CHANGELOG.md`.
 

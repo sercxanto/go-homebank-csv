@@ -14,17 +14,20 @@ HomeBank is a crossplatform free and easy accounting software.
 ## Supported formats
 
 * MoneyWallet
-    * [MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is an expense manager for Android.
-go-homebank-csv supports parsing and converting the CSV export format.
+  * [MoneyWallet](https://f-droid.org/en/packages/com.oriondev.moneywallet) is
+    an expense manager for Android. go-homebank-csv supports parsing and
+    converting the CSV export format.
 * Barclaycard
-    * Not exactly CSV, this is the excel export format of Barclays VISA card as found on [www.barclays.de](https://www.barclays.de).
+  * Not exactly CSV, this is the excel export format of Barclays VISA card as
+    found on [www.barclays.de](https://www.barclays.de).
 * Volksbank
-    * This is the CSV export format used by a German Volksbank. Most probably all Volksbanks have the same format.
+  * This is the CSV export format used by a German Volksbank.
+    Most probably all Volksbanks have the same format.
 * Comdirect
-    * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
-It has some weird encoding and the internal structure changes often.
+  * This is the giro account CSV export format used by [www.comdirect.de](https://www.comdirect.de).
+    It has some weird encoding and the internal structure changes often.
 * DKB
-    * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
+  * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
 
 ## Usage
 
@@ -50,7 +53,8 @@ go-homebank-csv convert --format=MoneyWallet input-file.csv output-file.csv
 
 ### Batch convert a folder of files
 
-You can autoconvert a defined set of folders. To use this feature a config file is needed.
+You can autoconvert a defined set of folders. To use this feature a config file
+is needed.
 
 The config file is expected at the following location:
 
@@ -100,15 +104,16 @@ The additional fields have the following meaning:
 * `fileglobpattern`: Narrow down the files to search for in `inputdir` by this pattern.
    The glob pattern follows the one from the package [path/filepath](https://pkg.go.dev/path/filepath#Match)
    from golang standard library.
-* `filemaxagedays`: Narrow down the files to search for in `inputdir` by specifying a maximum age in days
+* `filemaxagedays`: Narrow down the files to search for in `inputdir` by specifying
+   a maximum age in days
    (modification timestamp) in days. Only positive numbers are allowed.
-* `format`: Specify the exact format to be expected. If not given an probably error-prone and time-consuming
-   autodetection is done.
+* `format`: Specify the exact format to be expected. If not given an probably
+   error-prone and time-consuming autodetection is done.
 
 ##### Portable paths
 
-Paths inside the config file can use a small set of shortcuts so that the same configuration works on
-different machines:
+Paths inside the config file can use a small set of shortcuts so that the same
+configuration works on different machines:
 
 * Prefix with `~` to expand to the current user's home directory (for example `~/finance/inbox`).
 * Use `xdg:documents` or `xdg:documents/...` for the per-user documents directory.
@@ -150,10 +155,10 @@ go-homebank-csv batchconvert
 * Search in directory "/home/user/finance/barclaycard/xlsx" for files matching "*.xlsx"
   which have been modified not longer ago than 3 days
 * Check if a file with the same basename is already at "/home/user/finance/barclaycard/homebankcsv"
-* If this is not the case convert the found files using the same base name with an extention ".csv"
-  and store them at "/home/user/finance/barclaycard/homebankcsv"
+* If this is not the case convert the found files using the same base name with
+  an extention ".csv" and store them at "/home/user/finance/barclaycard/homebankcsv"
 * Search in directory "/home/user/finance/volksbank/csv" for files matching "*.csv"
   which have been modified not longer ago than 2 days
 * Check if a file with the same basename is already at "/home/user/finance/volksbank/homebankcsv"
-* If this is not the case convert the found files using the same base name with an extention ".csv"
-  and store them at "/home/user/finance/volksbank/homebankcsv"
+* If this is not the case convert the found files using the same base name with
+  an extention ".csv" and store them at "/home/user/finance/volksbank/homebankcsv"
