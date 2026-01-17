@@ -1,7 +1,7 @@
 date;payment;info;payee;memo;amount;category;tags
-2020-09-28;1;PAYPAL *DEALER    98765432   DE;Händler1;;-64.140000;;
-2020-09-19;1;XYZ  ROTTERDAM     NL;Händler2;;-15.000000;;
-2020-09-12;1;Abc *Abc def 12345 DE;Händler3;;-3.980000;;
-2020-09-12;1;DB FERNVERKEHR AG      FRANKFURT     DE;Händler4;;-4.970000;;
-2020-09-11;1;BANK ORT 1 PORT 2 >    DE;Händler5;;-250.000000;;
-2020-09-09;1;DB BAHN  A-BC 123ZOO   INTERNET      DE;Händler6;;-13.100000;;
+2020-09-28;1;Detail1;;;-64.140000;;
+2020-09-19;1;Detail2;;;-15.000000;;
+2020-09-12;1;Detail3;;;-3.980000;;
+2020-09-12;1;Detail4;;;-4.970000;;
+2020-09-11;1;Detail5;;;-250.000000;;
+2020-09-09;1;Detail6;;;-13.100000;;
