@@ -1,3 +1,0 @@
-kind: Fixed
-body: Fix Barclaycard parser to handle German amount format with thousands separators and euro symbol
-time: 2026-05-01T07:21:29.835195264Z
