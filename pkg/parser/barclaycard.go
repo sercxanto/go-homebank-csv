@@ -51,6 +51,15 @@ func isValidBarclaycardHeader(record []string) bool {
 	return reflect.DeepEqual(record, expected)
 }
 
+func parseBarclaycardAmount(valueString string) (float64, error) {
+	valueString = strings.TrimSpace(valueString)
+	valueString = strings.TrimSuffix(valueString, "€")
+	valueString = strings.TrimSpace(valueString)
+	valueString = strings.ReplaceAll(valueString, ".", "")
+	valueString = strings.ReplaceAll(valueString, ",", ".")
+	return strconv.ParseFloat(valueString, 64)
+}
+
 func (b *barclaycardParser) ParseFile(filepath string) error {
 	b.entries = make([]barclaycardRecord, 0)
 	f, err := excelize.OpenFile(filepath)
@@ -94,11 +103,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				}
 			}
 
-			var value float64
-			// Format in excel export is "3,14 €"
-			valueString := strings.ReplaceAll(row[3], ",", ".")
-			valueString = strings.TrimRight(valueString, "€")
-			value, err = strconv.ParseFloat(strings.TrimSpace(valueString), 64)
+			value, err := parseBarclaycardAmount(row[3])
 			if err != nil {
 				return &ParserError{
 					ErrorType: DataParsingError,

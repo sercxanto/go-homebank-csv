@@ -151,6 +151,16 @@ func TestBarclaycardParseFileNokWrongAmount(t *testing.T) {
 	}
 }
 
+func TestParseBarclaycardAmountWithThousandsSeparator(t *testing.T) {
+	amount, err := parseBarclaycardAmount("+2.456,54 €")
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if amount != 2456.54 {
+		t.Errorf("Expected 2456.54, got %f", amount)
+	}
+}
+
 func TestBarclaycardParseFileOk(t *testing.T) {
 	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze.xlsx")
 	mw := &barclaycardParser{}
