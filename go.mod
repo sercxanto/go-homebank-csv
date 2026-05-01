@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/adrg/xdg v0.5.3
-	github.com/alecthomas/kong v1.13.0
+	github.com/alecthomas/kong v1.15.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/xuri/excelize/v2 v2.10.0
 	golang.org/x/text v0.36.0
