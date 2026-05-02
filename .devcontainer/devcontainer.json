@@ -3,11 +3,10 @@
 {
 	"name": "Go",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/go:1.25-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/go:1.26-trixie",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/guiyomh/features/goreleaser:0": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -15,7 +14,6 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "go install github.com/miniscruff/changie@latest && go install golang.org/x/pkgsite/cmd/pkgsite@latest",
-
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
