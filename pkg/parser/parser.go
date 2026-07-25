@@ -6,6 +6,7 @@ package parser
 import (
 	"fmt"
 	"os"
+	"slices"
 )
 
 // SourceFormat is the source file format
@@ -48,11 +49,18 @@ func GetParser(s SourceFormat) Parser {
 }
 
 // GetSourceFormats returns the list of supported source formats.
+//
+// The formats are returned in the order in which they are defined. Sorting is
+// needed as the iteration order of a map is not specified: without it the
+// result differs between calls, which shows up in the output of the
+// "list-formats" command and in the order in which GetGuessedParser tries the
+// parsers.
 func GetSourceFormats() []SourceFormat {
 	formats := make([]SourceFormat, 0, len(sourceFormats))
 	for key := range sourceFormats {
 		formats = append(formats, key)
 	}
+	slices.Sort(formats)
 	return formats
 }
 
