@@ -95,8 +95,9 @@ func TestMoneywalletParseFileNokWrongDatetime(t *testing.T) {
 		if pError.ErrorType != DataParsingError {
 			t.Error("Expected DataParsingError")
 		}
-		if pError.Line != 1 {
-			t.Errorf("Expected DataParsingError on line 1, got %d", pError.Line)
+		// The header is line 1, so the first data row is line 2
+		if pError.Line != 2 {
+			t.Errorf("Expected DataParsingError on line 2, got %d", pError.Line)
 		}
 		if pError.Field != "datetime" {
 			t.Errorf("Expected field 'datetime', got '%s' instead", pError.Field)
@@ -107,6 +108,31 @@ func TestMoneywalletParseFileNokWrongDatetime(t *testing.T) {
 
 	if len(mw.entries) != 0 {
 		t.Error("Entries should be empty")
+	}
+}
+
+// The reported line number has to follow the data rows, not only match the
+// first one
+func TestMoneywalletParseFileNokWrongDatetimeSecondRow(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "MoneyWallet_nok_wrongdatetime_secondrow.csv")
+	mw := &moneywalletParser{}
+	err := mw.ParseFile(fpath)
+	if err == nil {
+		t.Error("Should fail")
+	}
+	var pError *ParserError
+	if errors.As(err, &pError) {
+		if pError.ErrorType != DataParsingError {
+			t.Error("Expected DataParsingError")
+		}
+		if pError.Line != 3 {
+			t.Errorf("Expected DataParsingError on line 3, got %d", pError.Line)
+		}
+		if pError.Field != "datetime" {
+			t.Errorf("Expected field 'datetime', got '%s' instead", pError.Field)
+		}
+	} else {
+		t.Error("Expected ParserError")
 	}
 }
 
@@ -122,8 +148,9 @@ func TestMoneywalletParseFileNokWrongMoney(t *testing.T) {
 		if pError.ErrorType != DataParsingError {
 			t.Error("Expected DataParsingError")
 		}
-		if pError.Line != 1 {
-			t.Errorf("Expected DataParsingError on line 1, got %d", pError.Line)
+		// The header is line 1, so the first data row is line 2
+		if pError.Line != 2 {
+			t.Errorf("Expected DataParsingError on line 2, got %d", pError.Line)
 		}
 		if pError.Field != "money" {
 			t.Errorf("Expected field 'money', got '%s' instead", pError.Field)
