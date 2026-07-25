@@ -54,7 +54,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
+				Line:      lineNr + 2,
 				Field:     "datetime",
 			}
 		}
@@ -65,7 +65,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParserError{
 				ErrorType: DataParsingError,
-				Line:      lineNr + 1,
+				Line:      lineNr + 2,
 				Field:     "money",
 			}
 		}
