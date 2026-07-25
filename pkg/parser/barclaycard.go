@@ -51,6 +51,28 @@ func isValidBarclaycardHeader(record []string) bool {
 	return reflect.DeepEqual(record, expected)
 }
 
+// barclaycardCell returns the value of the given column of a row.
+//
+// It returns an empty string if the row does not contain the column. excelize
+// omits trailing empty cells, so a row can be shorter than the header, e.g.
+// when the last column "Details" is not filled.
+func barclaycardCell(row []string, column int) string {
+	if column >= len(row) {
+		return ""
+	}
+	return row[column]
+}
+
+// isEmptyBarclaycardRow reports whether a row contains no data at all.
+func isEmptyBarclaycardRow(row []string) bool {
+	for _, column := range row {
+		if len(strings.TrimSpace(column)) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
 func parseBarclaycardAmount(valueString string) (float64, error) {
 	valueString = strings.TrimSpace(valueString)
 	valueString = strings.TrimSuffix(valueString, "€")
@@ -79,7 +101,13 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 	for lineNr, row := range rows {
 		if inDataSection {
 
-			tDate, err := time.Parse("02.01.2006", row[1])
+			// Empty rows, e.g. separating the data section from a footer,
+			// carry no transaction and are skipped
+			if isEmptyBarclaycardRow(row) {
+				continue
+			}
+
+			tDate, err := time.Parse("02.01.2006", barclaycardCell(row, 1))
 			if err != nil {
 				return &ParserError{
 					ErrorType: DataParsingError,
@@ -90,11 +118,11 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 
 			// Entries with an empty "Buchungsdatum" are "vorgemerkt", not "Berechnet"
 			// and need to be skipped
-			if len(row[2]) == 0 {
+			if len(barclaycardCell(row, 2)) == 0 {
 				continue
 			}
 
-			bDate, err := time.Parse("02.01.2006", row[2])
+			bDate, err := time.Parse("02.01.2006", barclaycardCell(row, 2))
 			if err != nil {
 				return &ParserError{
 					ErrorType: DataParsingError,
@@ -103,7 +131,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				}
 			}
 
-			value, err := parseBarclaycardAmount(row[3])
+			value, err := parseBarclaycardAmount(barclaycardCell(row, 3))
 			if err != nil {
 				return &ParserError{
 					ErrorType: DataParsingError,
@@ -116,7 +144,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				transactionDate: tDate,
 				bookingDate:     bDate,
 				value:           value,
-				description:     row[14],
+				description:     barclaycardCell(row, 14),
 			}
 			b.entries = append(b.entries, bRecord)
 		} else {
