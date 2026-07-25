@@ -2,8 +2,29 @@ package parser
 
 import (
 	"path/filepath"
+	"slices"
 	"testing"
 )
+
+// The order of the returned formats has to be stable: it determines the output
+// of the "list-formats" command and the order in which GetGuessedParser tries
+// the parsers.
+func TestGetSourceFormatsOrder(t *testing.T) {
+	expected := []SourceFormat{MoneyWallet, Barclaycard, Volksbank, Comdirect, DKB}
+
+	formats := GetSourceFormats()
+	if !slices.Equal(formats, expected) {
+		t.Errorf("Expected %v, got %v", expected, formats)
+	}
+
+	// Repeated calls keep the order. Without sorting this fails, as the
+	// iteration order of a map is randomized.
+	for i := 0; i < 100; i++ {
+		if !slices.Equal(GetSourceFormats(), expected) {
+			t.Fatalf("Call %d returned a different order: %v", i, GetSourceFormats())
+		}
+	}
+}
 
 func TestGetParser(t *testing.T) {
 	for _, f := range GetSourceFormats() {
