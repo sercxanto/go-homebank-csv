@@ -151,6 +151,38 @@ func TestBarclaycardParseFileNokWrongAmount(t *testing.T) {
 	}
 }
 
+func TestBarclaycardCell(t *testing.T) {
+	row := []string{"first", "second"}
+	if barclaycardCell(row, 0) != "first" {
+		t.Errorf("Expected 'first', got '%s'", barclaycardCell(row, 0))
+	}
+	if barclaycardCell(row, 1) != "second" {
+		t.Errorf("Expected 'second', got '%s'", barclaycardCell(row, 1))
+	}
+	// Columns beyond the row are reported as empty instead of panicking
+	if barclaycardCell(row, 2) != "" {
+		t.Errorf("Expected empty string, got '%s'", barclaycardCell(row, 2))
+	}
+	if barclaycardCell(row, 14) != "" {
+		t.Errorf("Expected empty string, got '%s'", barclaycardCell(row, 14))
+	}
+	if barclaycardCell([]string{}, 0) != "" {
+		t.Errorf("Expected empty string for empty row")
+	}
+}
+
+func TestIsEmptyBarclaycardRow(t *testing.T) {
+	if !isEmptyBarclaycardRow([]string{}) {
+		t.Error("Empty row should be reported as empty")
+	}
+	if !isEmptyBarclaycardRow([]string{"", "  ", ""}) {
+		t.Error("Row with blank columns only should be reported as empty")
+	}
+	if isEmptyBarclaycardRow([]string{"", "value"}) {
+		t.Error("Row with a value should not be reported as empty")
+	}
+}
+
 func TestParseBarclaycardAmountWithThousandsSeparator(t *testing.T) {
 	amount, err := parseBarclaycardAmount("+2.456,54 €")
 	if err != nil {
@@ -166,6 +198,48 @@ func TestBarclaycardParseFileOk(t *testing.T) {
 	mw := &barclaycardParser{}
 	if err := mw.ParseFile(fpath); err != nil {
 		t.Error(err)
+	}
+}
+
+// Rows can be shorter than the header as excelize omits trailing empty cells,
+// see the fixture Umsaetze_shortrows.xlsx
+func TestBarclaycardParseFileShortRows(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_shortrows.xlsx")
+	bc := &barclaycardParser{}
+	if err := bc.ParseFile(fpath); err != nil {
+		t.Fatal(err)
+	}
+
+	// The "vorgemerkt" entry without "Buchungsdatum" and the empty row are skipped
+	if bc.GetNumberOfEntries() != 3 {
+		t.Fatalf("Expected 3 entries, got %d", bc.GetNumberOfEntries())
+	}
+
+	expectedDescriptions := []string{"DetailA", "", "DetailB"}
+	for i, expected := range expectedDescriptions {
+		if bc.entries[i].description != expected {
+			t.Errorf("Entry %d: expected description '%s', got '%s'",
+				i, expected, bc.entries[i].description)
+		}
+	}
+
+	expectedDates := []time.Time{
+		time.Date(2020, 9, 28, 0, 0, 0, 0, time.UTC),
+		time.Date(2020, 9, 19, 0, 0, 0, 0, time.UTC),
+		time.Date(2020, 9, 12, 0, 0, 0, 0, time.UTC),
+	}
+	for i, expected := range expectedDates {
+		if !bc.entries[i].transactionDate.Equal(expected) {
+			t.Errorf("Entry %d: expected transaction date %s, got %s",
+				i, expected, bc.entries[i].transactionDate)
+		}
+	}
+
+	expectedValues := []float64{-64.14, -15.00, -3.98}
+	for i, expected := range expectedValues {
+		if bc.entries[i].value != expected {
+			t.Errorf("Entry %d: expected value %f, got %f", i, expected, bc.entries[i].value)
+		}
 	}
 }
 
@@ -222,6 +296,27 @@ func TestBarclaycardConvertToHomebank(t *testing.T) {
 	}
 
 	expected := filepath.Join("testfiles", "barclaycard", "Umsaetze.csv")
+	if !areFilesEqual(expected, tmpFilepath) {
+		t.Error("Files are not equal")
+	}
+}
+
+func TestBarclaycardConvertToHomebankShortRows(t *testing.T) {
+	fpath := filepath.Join("testfiles", "barclaycard", "Umsaetze_shortrows.xlsx")
+	b := &barclaycardParser{}
+	err := b.ParseFile(fpath)
+	if err != nil {
+		t.Error(err)
+	}
+	tmpDir := t.TempDir()
+	tmpFilepath := filepath.Join(tmpDir, "output.csv")
+
+	err = b.ConvertToHomebank(tmpFilepath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := filepath.Join("testfiles", "barclaycard", "Umsaetze_shortrows.csv")
 	if !areFilesEqual(expected, tmpFilepath) {
 		t.Error("Files are not equal")
 	}
