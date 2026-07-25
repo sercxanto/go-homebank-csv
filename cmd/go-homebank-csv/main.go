@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -126,5 +127,8 @@ func main() {
 	err := ctx.Run()
 	if err != nil {
 		fmt.Println(err)
+		// Exit with a non zero code so that callers, e.g. shell scripts or
+		// cron jobs, can detect the failure
+		os.Exit(1)
 	}
 }
