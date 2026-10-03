@@ -1,0 +1,3 @@
+kind: Fixed
+body: Fix broken CSV output when a text field contains a semicolon or a line break
+time: 2026-07-25T20:49:38.230785574Z

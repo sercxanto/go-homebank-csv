@@ -1,10 +1,76 @@
 package parser
 
 import (
+	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 )
+
+func TestSanitizeHomebankField(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"a plain memo", "a plain memo"},
+		{"", ""},
+		{"Rechnung; Nr 123", "Rechnung, Nr 123"},
+		{"a;b;c", "a,b,c"},
+		{"line1\r\nline2", "line1 line2"},
+		{"line1\nline2", "line1 line2"},
+		{"line1\rline2", "line1 line2"},
+		{"mixed;value\nwith both", "mixed,value with both"},
+	}
+
+	for _, c := range cases {
+		got := sanitizeHomebankField(c.input)
+		if got != c.expected {
+			t.Errorf("Input %q: expected %q, got %q", c.input, c.expected, got)
+		}
+	}
+}
+
+// A separator or a line break inside a text field must not shift the fields of
+// the written record
+func TestWriteHomeBankRecordsSanitizesFields(t *testing.T) {
+	records := []homebankRecord{
+		{
+			date:     "2024-01-01",
+			payment:  0,
+			info:     "info;with;separator",
+			payee:    "Payee; Name",
+			memo:     "memo;with\nline break",
+			amount:   -1.5,
+			category: "cat;egory",
+			tags:     "tag;one",
+		},
+	}
+
+	fpath := filepath.Join(t.TempDir(), "output.csv")
+	if err := writeHomeBankRecords(records, fpath); err != nil {
+		t.Fatal(err)
+	}
+	content, err := os.ReadFile(fpath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lines := strings.Split(strings.TrimRight(string(content), "\n"), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("Expected a header and one record, got %d lines: %q", len(lines), lines)
+	}
+	for i, line := range lines {
+		if fields := strings.Count(line, homebankFieldSeparator) + 1; fields != 8 {
+			t.Errorf("Line %d has %d fields instead of 8: %s", i+1, fields, line)
+		}
+	}
+
+	expected := "2024-01-01;0;info,with,separator;Payee, Name;memo,with line break;-1.500000;cat,egory;tag,one"
+	if lines[1] != expected {
+		t.Errorf("Expected:\n%s\ngot:\n%s", expected, lines[1])
+	}
+}
 
 // The order of the returned formats has to be stable: it determines the output
 // of the "list-formats" command and the order in which GetGuessedParser tries

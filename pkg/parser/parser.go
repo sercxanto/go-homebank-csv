@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 )
 
 // SourceFormat is the source file format
@@ -181,6 +182,27 @@ type homebankRecord struct {
 	tags     string
 }
 
+// homebankFieldSeparator separates the fields of a homebank CSV file
+const homebankFieldSeparator = ";"
+
+// sanitizeHomebankField makes the content of a text field safe to write.
+//
+// The fields are separated by homebankFieldSeparator. A separator inside a
+// field would shift all following fields of the record, a line break would end
+// the record early. Both are replaced instead of quoted: the format does not
+// document a way to quote or escape a field, so a quoted separator cannot be
+// relied on to be understood by the importing side.
+//
+// Bank data does contain such characters, e.g. a "Verwendungszweck" with a
+// semicolon, so dropping the affected records is not an option.
+func sanitizeHomebankField(value string) string {
+	value = strings.ReplaceAll(value, homebankFieldSeparator, ",")
+	value = strings.ReplaceAll(value, "\r\n", " ")
+	value = strings.ReplaceAll(value, "\n", " ")
+	value = strings.ReplaceAll(value, "\r", " ")
+	return value
+}
+
 // writeHomeBankRecords writes a slice of HomebankRecord to a CSV file
 // See "Transaction import CSV format" under http://homebank.free.fr/help/misc-csvformat.html
 func writeHomeBankRecords(records []homebankRecord, filepath string) error {
@@ -197,8 +219,16 @@ func writeHomeBankRecords(records []homebankRecord, filepath string) error {
 	}
 
 	for _, rec := range records {
+		// date is a formatted timestamp, payment and amount are numbers, so
+		// only the text fields can contain a separator or a line break
 		line := fmt.Sprintf("%s;%d;%s;%s;%s;%f;%s;%s",
-			rec.date, rec.payment, rec.info, rec.payee, rec.memo, rec.amount, rec.category, rec.tags)
+			rec.date, rec.payment,
+			sanitizeHomebankField(rec.info),
+			sanitizeHomebankField(rec.payee),
+			sanitizeHomebankField(rec.memo),
+			rec.amount,
+			sanitizeHomebankField(rec.category),
+			sanitizeHomebankField(rec.tags))
 		_, err := fmt.Fprintln(outfile, line)
 		if err != nil {
 			return err
