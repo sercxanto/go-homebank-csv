@@ -1,3 +1,0 @@
-kind: Changed
-body: Raise the required Go version from 1.25 to 1.26 (required by golang.org/x/text 0.42.0) and update golangci-lint from v2.5 to v2.14
-time: 2026-10-03T09:40:00.000000000Z
