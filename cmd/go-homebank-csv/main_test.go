@@ -121,3 +121,15 @@ func TestMainListFormats(t *testing.T) {
 		t.Errorf("Expected the format list to contain 'MoneyWallet', got: %s", output)
 	}
 }
+
+// The version is shown without any further arguments
+func TestMainVersion(t *testing.T) {
+	exitCode, output := runMain(t, "--version")
+
+	if exitCode != 0 {
+		t.Errorf("Expected exit code 0, got %d. Output: %s", exitCode, output)
+	}
+	if !strings.HasPrefix(output, "go-homebank-csv ") {
+		t.Errorf("Expected the output to start with 'go-homebank-csv ', got: %s", output)
+	}
+}

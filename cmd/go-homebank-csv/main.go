@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -25,9 +27,10 @@ type BatchConvertCmd struct {
 }
 
 var CLI struct {
-	Convert      ConvertCmd      `cmd:"" default:"withargs" help:"Convert CSV"`
-	BatchConvert BatchConvertCmd `cmd:"" help:"Batch convert CSV"`
-	ListFormats  ListFormatsCmd  `cmd:"" help:"Lists supported formats"`
+	Version      kong.VersionFlag `help:"Show version and exit"`
+	Convert      ConvertCmd       `cmd:"" default:"withargs" help:"Convert CSV"`
+	BatchConvert BatchConvertCmd  `cmd:"" help:"Batch convert CSV"`
+	ListFormats  ListFormatsCmd   `cmd:"" help:"Lists supported formats"`
 }
 
 func (c *ConvertCmd) Run() error {
@@ -122,8 +125,18 @@ func (l *ListFormatsCmd) Run() error {
 	return nil
 }
 
+// version returns the module version embedded by the Go toolchain at build
+// time, without the leading "v" of the git tag
+func version() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	return strings.TrimPrefix(info.Main.Version, "v")
+}
+
 func main() {
-	ctx := kong.Parse(&CLI)
+	ctx := kong.Parse(&CLI, kong.Vars{"version": "go-homebank-csv " + version()})
 	err := ctx.Run()
 	if err != nil {
 		fmt.Println(err)

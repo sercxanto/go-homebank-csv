@@ -11,10 +11,10 @@ doc-serve:
 	pkgsite -open
 
 install-tools:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.5.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v2.14.0/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.14.0
 	go install golang.org/x/pkgsite/cmd/pkgsite@latest
 	go install github.com/miniscruff/changie@latest
-	go install github.com/goreleaser/goreleaser/v2@latest
+	GOTOOLCHAIN=auto go install github.com/goreleaser/goreleaser/v2@latest
 
 lint:
 	golangci-lint run
@@ -23,7 +23,7 @@ test:
 	go test -v -cover ./...
 
 build:
-	go build -o bin/$(BUILD_STRING)/go-homebank-csv cmd/go-homebank-csv/main.go
+	go build -o bin/$(BUILD_STRING)/go-homebank-csv ./cmd/go-homebank-csv
 
 clean:
 	rm -rf bin
