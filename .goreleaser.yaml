@@ -22,7 +22,7 @@ builds:
       - linux
       - windows
       - darwin
-    main: ./cmd/go-homebank-csv/main.go
+    main: ./cmd/go-homebank-csv
     binary: go-homebank-csv
 
 

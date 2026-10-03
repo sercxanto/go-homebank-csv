@@ -31,6 +31,12 @@ HomeBank is a crossplatform free and easy accounting software.
 
 ## Usage
 
+Show the version:
+
+```shell
+go-homebank-csv --version
+```
+
 List supported formats:
 
 ```shell
