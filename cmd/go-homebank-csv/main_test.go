@@ -65,6 +65,26 @@ func runMainWithEnv(t *testing.T, env []string, args ...string) (int, string) {
 	return 0, string(output)
 }
 
+// runMainSeparateOutput is like runMain, but returns stdout and stderr of the
+// subprocess separately
+func runMainSeparateOutput(t *testing.T, args ...string) (int, string, string) {
+	t.Helper()
+	cmd := exec.Command(os.Args[0], append([]string{testMainSeparator}, args...)...)
+	cmd.Env = append(os.Environ(), testMainEnv+"=1")
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	var exitError *exec.ExitError
+	if errors.As(err, &exitError) {
+		return exitError.ExitCode(), stdout.String(), stderr.String()
+	}
+	if err != nil {
+		t.Fatalf("Cannot run subprocess: %v", err)
+	}
+	return 0, stdout.String(), stderr.String()
+}
+
 // writeTempFile writes content into a new file inside the test's temp dir
 func writeTempFile(t *testing.T, name string, content string) string {
 	t.Helper()
@@ -192,6 +212,47 @@ func TestMainBatchConvertSuccess(t *testing.T) {
 		t.Errorf("Expected exit code 0, got %d. Output: %s", exitCode, output)
 	}
 	if _, err := os.Stat(filepath.Join(outputDir, "moneywallet.csv")); err != nil {
+		t.Errorf("Output file has not been written: %v", err)
+	}
+}
+
+// Errors are written to stderr, the regular output stays on stdout
+func TestMainErrorOnStderr(t *testing.T) {
+	infile := writeTempFile(t, "unknown_format.csv", "not,a,known,bank,export\n")
+	outfile := filepath.Join(filepath.Dir(infile), "output.csv")
+
+	exitCode, stdout, stderr := runMainSeparateOutput(t, "convert", infile, outfile)
+
+	if exitCode == 0 {
+		t.Errorf("Expected non zero exit code, got %d", exitCode)
+	}
+	if !strings.Contains(stderr, "cannot deduce format") {
+		t.Errorf("Expected the error on stderr, got: %q", stderr)
+	}
+	if strings.Contains(stdout, "cannot deduce format") {
+		t.Errorf("Expected no error on stdout, got: %q", stdout)
+	}
+	if !strings.Contains(stdout, "Converting file") {
+		t.Errorf("Expected the regular output on stdout, got: %q", stdout)
+	}
+}
+
+// A file of a detected format is converted without an explicit format
+func TestMainConvertDetectedFormat(t *testing.T) {
+	content := "wallet,currency,category,datetime,money,description\n" +
+		"Wallet,EUR,Category,2024-01-02 10:00:00,-12.34,Description\n"
+	infile := writeTempFile(t, "moneywallet.csv", content)
+	outfile := filepath.Join(filepath.Dir(infile), "output.csv")
+
+	exitCode, output := runMain(t, "convert", infile, outfile)
+
+	if exitCode != 0 {
+		t.Errorf("Expected exit code 0, got %d. Output: %s", exitCode, output)
+	}
+	if !strings.Contains(output, "Detected format 'MoneyWallet'") || !strings.Contains(output, "Found 1 entries") {
+		t.Errorf("Expected the detected format and the number of entries, got: %s", output)
+	}
+	if _, err := os.Stat(outfile); err != nil {
 		t.Errorf("Output file has not been written: %v", err)
 	}
 }
