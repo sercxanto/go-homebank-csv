@@ -28,7 +28,7 @@ This file contains repository-specific instructions for AI coding agents.
 - Keep parser changes scoped to the affected source format. Do not make other
   parsers more permissive as an incidental cleanup.
 - Back parser behavior changes with representative fixtures and tests. Cover
-  successful input and relevant malformed input, including `ParserError` type,
+  successful input and relevant malformed input, including `ParseError` type,
   field, and line information where applicable.
 - Use only synthetic, sanitized financial data in fixtures. Never commit real
   names, account details, transaction data, credentials, or unsanitized bank

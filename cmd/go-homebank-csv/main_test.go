@@ -110,7 +110,7 @@ func TestMainConvertUnknownFormat(t *testing.T) {
 
 // A file which does not match the explicitly given format cannot be converted
 // either
-func TestMainConvertParserError(t *testing.T) {
+func TestMainConvertParseError(t *testing.T) {
 	infile := writeTempFile(t, "no_dkb_file.csv", "not,a,known,bank,export\n")
 	outfile := filepath.Join(filepath.Dir(infile), "output.csv")
 

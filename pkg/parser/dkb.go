@@ -46,7 +46,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	p.entries = make([]dkbRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	defer infile.Close()
 
@@ -56,7 +56,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 
 	var headerIndex = -1
@@ -68,7 +68,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	}
 
 	if headerIndex == -1 {
-		return &ParserError{ErrorType: HeaderError}
+		return &ParseError{Type: HeaderError}
 	}
 
 	for lineNr, row := range records[headerIndex+1:] {
@@ -81,20 +81,20 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		}
 		parsedBuchungsdatum, err := time.Parse("02.01.06", row[0])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Buchungsdatum",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Buchungsdatum",
+				Err:   err,
 			}
 		}
 		parsedWertstellung, err := time.Parse("02.01.06", row[1])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Wertstellung",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Wertstellung",
+				Err:   err,
 			}
 		}
 		amountString := strings.ReplaceAll(row[8], ".", "")
@@ -102,11 +102,11 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		var amount float64
 		amount, err = strconv.ParseFloat(amountString, 64)
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Betrag (€)",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Betrag (€)",
+				Err:   err,
 			}
 		}
 		dRecord := dkbRecord{

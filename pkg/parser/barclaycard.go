@@ -86,15 +86,15 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 	b.entries = make([]barclaycardRecord, 0)
 	f, err := excelize.OpenFile(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	// Removes the temporary files excelize creates for large worksheets
 	defer f.Close()
 	rows, err := f.GetRows("Sheet1")
 	if err != nil {
-		return &ParserError{
-			ErrorType: HeaderError,
-			Err:       err,
+		return &ParseError{
+			Type: HeaderError,
+			Err:  err,
 		}
 	}
 
@@ -112,11 +112,11 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 
 			tDate, err := time.Parse("02.01.2006", barclaycardCell(row, 1))
 			if err != nil {
-				return &ParserError{
-					ErrorType: DataParsingError,
-					Line:      lineNr + 1,
-					Field:     "Buchungsdatum(1)/Transaktionsdatum",
-					Err:       err,
+				return &ParseError{
+					Type:  DataParsingError,
+					Line:  lineNr + 1,
+					Field: "Buchungsdatum(1)/Transaktionsdatum",
+					Err:   err,
 				}
 			}
 
@@ -128,21 +128,21 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 
 			bDate, err := time.Parse("02.01.2006", barclaycardCell(row, 2))
 			if err != nil {
-				return &ParserError{
-					ErrorType: DataParsingError,
-					Line:      lineNr + 1,
-					Field:     "Buchungsdatum",
-					Err:       err,
+				return &ParseError{
+					Type:  DataParsingError,
+					Line:  lineNr + 1,
+					Field: "Buchungsdatum",
+					Err:   err,
 				}
 			}
 
 			value, err := parseBarclaycardAmount(barclaycardCell(row, 3))
 			if err != nil {
-				return &ParserError{
-					ErrorType: DataParsingError,
-					Line:      lineNr + 1,
-					Field:     "Betrag",
-					Err:       err,
+				return &ParseError{
+					Type:  DataParsingError,
+					Line:  lineNr + 1,
+					Field: "Betrag",
+					Err:   err,
 				}
 			}
 
@@ -159,8 +159,8 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 		}
 	}
 	if !dataSectionFound {
-		return &ParserError{
-			ErrorType: HeaderError,
+		return &ParseError{
+			Type: HeaderError,
 		}
 	}
 	return nil

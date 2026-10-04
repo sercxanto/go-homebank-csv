@@ -28,7 +28,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	m.entries = make([]volksbankRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	defer infile.Close()
 	bomStripped := transform.NewReader(infile, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
@@ -36,16 +36,16 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	csvReader.Comma = ';'
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	if len(records) == 0 {
-		return &ParserError{ErrorType: HeaderError}
+		return &ParseError{Type: HeaderError}
 	}
 
 	if !isValidVolksbankHeader(records[0]) {
-		return &ParserError{
-			ErrorType: HeaderError,
-			Line:      1,
+		return &ParseError{
+			Type: HeaderError,
+			Line: 1,
 		}
 	}
 
@@ -57,22 +57,22 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	for lineNr, row := range records[1:] {
 		date, err := time.Parse("02.01.2006", row[4])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      lineNr + 2,
-				Field:     "Buchungstag",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  lineNr + 2,
+				Field: "Buchungstag",
+				Err:   err,
 			}
 		}
 		betragString := strings.ReplaceAll(row[11], ",", ".")
 		var betrag float64
 		betrag, err = strconv.ParseFloat(betragString, 64)
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      lineNr + 2,
-				Field:     "Betrag",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  lineNr + 2,
+				Field: "Betrag",
+				Err:   err,
 			}
 		}
 		vRecord := volksbankRecord{

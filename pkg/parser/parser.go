@@ -94,18 +94,16 @@ func NewSourceFormat(value SourceFormat) *SourceFormat {
 	return &value
 }
 
-// A ParserErrorType describes the type of error
-//
-//nolint:revive // Renaming the exported type would break the public API
-type ParserErrorType int
+// An ErrorType describes the type of a ParseError
+type ErrorType int
 
 const (
-	IOError          ParserErrorType = iota // Error during file I/O
-	HeaderError                             // Error in expected header
-	DataParsingError                        // Error during parsing section
+	IOError          ErrorType = iota // Error during file I/O
+	HeaderError                       // Error in expected header
+	DataParsingError                  // Error during parsing section
 )
 
-func (e ParserErrorType) String() string {
+func (e ErrorType) String() string {
 	switch e {
 	case IOError:
 		return "IOError"
@@ -118,11 +116,10 @@ func (e ParserErrorType) String() string {
 	}
 }
 
-// ParserError describes the error which could occur during parsing
-//
-//nolint:revive // Renaming the exported type would break the public API
-type ParserError struct {
-	ErrorType ParserErrorType
+// ParseError describes the error which could occur during parsing
+type ParseError struct {
+	// Type of the error
+	Type ErrorType
 
 	// Optional line number where the error occurs. Line numbers are
 	// 1 based. The value "0" means no line number applies here, e.g.
@@ -138,9 +135,9 @@ type ParserError struct {
 	Err error
 }
 
-func (e *ParserError) Error() string {
+func (e *ParseError) Error() string {
 	var msg string
-	msg = e.ErrorType.String()
+	msg = e.Type.String()
 	if e.Line > 0 {
 		msg += fmt.Sprintf(" in line %d", e.Line)
 	}
@@ -154,7 +151,7 @@ func (e *ParserError) Error() string {
 }
 
 // Unwrap returns the underlying error, nil if there is none
-func (e *ParserError) Unwrap() error {
+func (e *ParseError) Unwrap() error {
 	return e.Err
 }
 

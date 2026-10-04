@@ -21,13 +21,13 @@ func TestComdirectParseFileNonExisting(t *testing.T) {
 	if err == nil {
 		t.Error("Non existing file should return error")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != IOError {
+		if pError.Type != IOError {
 			t.Error("Expected IOError")
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 	if v.GetNumberOfEntries() != 0 {
 		t.Error("Entries should be empty")
@@ -41,13 +41,13 @@ func TestComdirectParseFileNok(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
-			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.Type)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -61,16 +61,16 @@ func TestComdirectParseFileNokInvalidHeader(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
-			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 0 {
 			t.Errorf("Expected error on line 0, got %d", pError.Line)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -84,10 +84,10 @@ func TestComdirectParseFileNokWrongBuchungstag(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 3 {
 			t.Errorf("Expected error on line 3, got %d", pError.Line)
@@ -96,7 +96,7 @@ func TestComdirectParseFileNokWrongBuchungstag(t *testing.T) {
 			t.Errorf("Expected error on field 'Buchungstag', got %s", pError.Field)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -110,10 +110,10 @@ func TestComdirectParseFileNokWrongUmsatz(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 3 {
 			t.Errorf("Expected error on line 3, got %d", pError.Line)
@@ -122,7 +122,7 @@ func TestComdirectParseFileNokWrongUmsatz(t *testing.T) {
 			t.Errorf("Expected error on field 'Umsatz in EUR', got %s", pError.Field)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")

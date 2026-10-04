@@ -20,13 +20,13 @@ func TestMoneywalletParseFileNonExisting(t *testing.T) {
 	if err == nil {
 		t.Error("Non existing file should return error")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != IOError {
+		if pError.Type != IOError {
 			t.Error("Expected IOError")
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 	if mw.GetNumberOfEntries() != 0 {
 		t.Error("Entries should be empty")
@@ -41,16 +41,16 @@ func TestMoneywalletParseFileNok(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
+		if pError.Type != HeaderError {
 			t.Error("Expected HeaderError")
 		}
 		if pError.Line != 1 {
 			t.Error("Expected HeaderError on first line")
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 
 	if len(mw.entries) != 0 {
@@ -66,16 +66,16 @@ func TestMoneywalletParseFileNokNoHeader(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
+		if pError.Type != HeaderError {
 			t.Error("Expected HeaderError")
 		}
 		if pError.Line != 0 {
 			t.Errorf("Expected HeaderError on line 0, got %d", pError.Line)
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 
 	if len(mw.entries) != 0 {
@@ -90,9 +90,9 @@ func TestMoneywalletParseFileNokWrongDatetime(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
+		if pError.Type != DataParsingError {
 			t.Error("Expected DataParsingError")
 		}
 		// The header is line 1, so the first data row is line 2
@@ -103,7 +103,7 @@ func TestMoneywalletParseFileNokWrongDatetime(t *testing.T) {
 			t.Errorf("Expected field 'datetime', got '%s' instead", pError.Field)
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 
 	if len(mw.entries) != 0 {
@@ -120,9 +120,9 @@ func TestMoneywalletParseFileNokWrongDatetimeSecondRow(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
+		if pError.Type != DataParsingError {
 			t.Error("Expected DataParsingError")
 		}
 		if pError.Line != 3 {
@@ -132,7 +132,7 @@ func TestMoneywalletParseFileNokWrongDatetimeSecondRow(t *testing.T) {
 			t.Errorf("Expected field 'datetime', got '%s' instead", pError.Field)
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 }
 
@@ -143,9 +143,9 @@ func TestMoneywalletParseFileNokWrongMoney(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
+		if pError.Type != DataParsingError {
 			t.Error("Expected DataParsingError")
 		}
 		// The header is line 1, so the first data row is line 2
@@ -156,7 +156,7 @@ func TestMoneywalletParseFileNokWrongMoney(t *testing.T) {
 			t.Errorf("Expected field 'money', got '%s' instead", pError.Field)
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 
 	if len(mw.entries) != 0 {
