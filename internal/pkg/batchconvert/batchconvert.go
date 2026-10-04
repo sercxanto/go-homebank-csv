@@ -1,4 +1,4 @@
-// Package batchconvert implements convertig sets of files in batches.
+// Package batchconvert implements converting sets of files in batches.
 package batchconvert
 
 import (
@@ -63,15 +63,16 @@ func findFiles(inputDir string, fileGlobPattern string, minTime time.Time) ([]st
 	return matchingFiles, nil
 }
 
-const (
-	NotStartedYet        = iota // Conversion has not started yet
-	Skipped                     // File is skipped because it already exists in the output directory
-	ConversionInProgress        // Conversion is in progress
-	ConversionError             // Conversion failed
-	ConversionSuccess           // Conversion was successful
-)
-
+// ConversionStatus is the status of the conversion of a single file
 type ConversionStatus int
+
+const (
+	NotStartedYet        ConversionStatus = iota // Conversion has not started yet
+	Skipped                                      // File is skipped because it already exists in the output directory
+	ConversionInProgress                         // Conversion is in progress
+	ConversionError                              // Conversion failed
+	ConversionSuccess                            // Conversion was successful
+)
 
 // Conversion status of a single file
 type FileStatus struct {

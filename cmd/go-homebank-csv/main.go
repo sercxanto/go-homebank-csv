@@ -69,8 +69,8 @@ func (c *BatchConvertCmd) Run() error {
 		return err
 	}
 	fmt.Println("Loaded configuration from", configFile)
-	if s.CheckValidity() != nil {
-		return s.CheckValidity()
+	if err := s.CheckValidity(); err != nil {
+		return err
 	}
 	if len(s.BatchConvert.Sets) == 0 {
 		return errors.New("no batchconvert sets defined in config file")

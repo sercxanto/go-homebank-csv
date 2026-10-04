@@ -1,4 +1,4 @@
-// Package setting implements config file settings for go-homebank-csv.
+// Package settings implements config file settings for go-homebank-csv.
 package settings
 
 import (
@@ -64,15 +64,6 @@ func (s *Settings) LoadFromString(str string) error {
 }
 
 func (s *Settings) LoadFromFile(filePath string) error {
-
-	// Open file filePath for reading
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Read file into a byte slice
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
@@ -95,7 +86,7 @@ func (s *Settings) LoadFromDefaultFile() (string, error) {
 	return configFilePath, s.LoadFromFile(configFilePath)
 }
 
-// CheckValidity reports whether a the whole settings are valid
+// CheckValidity reports whether the whole settings are valid
 func (s Settings) CheckValidity() error {
 	if len(s.BatchConvert.Sets) > 0 {
 		return s.BatchConvert.Sets.CheckValidity()
