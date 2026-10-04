@@ -32,8 +32,8 @@ type dkbRecord struct {
 	verwendungszweck    string
 	umsatztyp           string
 	iban                string
-	betrag_eur          float64
-	glaeubigerId        string
+	betragEUR           float64
+	glaeubigerID        string
 	mandatsreferenz     string
 	kundenreferenz      string
 }
@@ -46,7 +46,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	p.entries = make([]dkbRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	defer infile.Close()
 
@@ -56,7 +56,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 
 	var headerIndex = -1
@@ -68,7 +68,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	}
 
 	if headerIndex == -1 {
-		return &ParserError{ErrorType: HeaderError}
+		return &ParseError{Type: HeaderError}
 	}
 
 	for lineNr, row := range records[headerIndex+1:] {
@@ -81,20 +81,20 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		}
 		parsedBuchungsdatum, err := time.Parse("02.01.06", row[0])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Buchungsdatum",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Buchungsdatum",
+				Err:   err,
 			}
 		}
 		parsedWertstellung, err := time.Parse("02.01.06", row[1])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Wertstellung",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Wertstellung",
+				Err:   err,
 			}
 		}
 		amountString := strings.ReplaceAll(row[8], ".", "")
@@ -102,11 +102,11 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		var amount float64
 		amount, err = strconv.ParseFloat(amountString, 64)
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      nonEmptyLineNr,
-				Field:     "Betrag (€)",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  nonEmptyLineNr,
+				Field: "Betrag (€)",
+				Err:   err,
 			}
 		}
 		dRecord := dkbRecord{
@@ -118,12 +118,12 @@ func (p *dkbParser) ParseFile(filepath string) error {
 			verwendungszweck:    row[5],
 			umsatztyp:           row[6],
 			iban:                row[7],
-			betrag_eur:          amount,
-			glaeubigerId:        row[9],
+			betragEUR:           amount,
+			glaeubigerID:        row[9],
 			mandatsreferenz:     row[10],
 			kundenreferenz:      row[11],
 		}
-		if dRecord.umsatztyp == "Eingang" && dRecord.betrag_eur == 0 && dRecord.zahlungspflichtiger == "DKB AG" && dRecord.zahlungsempfaenger == "DKB AG" {
+		if dRecord.umsatztyp == "Eingang" && dRecord.betragEUR == 0 && dRecord.zahlungspflichtiger == "DKB AG" && dRecord.zahlungsempfaenger == "DKB AG" {
 			continue
 		}
 		p.entries = append(p.entries, dRecord)
@@ -131,17 +131,17 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (d *dkbParser) GetFormat() SourceFormat {
+func (p *dkbParser) GetFormat() SourceFormat {
 	return DKB
 }
 
-func (d *dkbParser) GetNumberOfEntries() int {
-	return len(d.entries)
+func (p *dkbParser) GetNumberOfEntries() int {
+	return len(p.entries)
 }
 
-func (v *dkbParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(v.entries))
-	for _, mRecord := range v.entries {
+func (p *dkbParser) ConvertToHomebank(filepath string) error {
+	hRecords := make([]homebankRecord, 0, len(p.entries))
+	for _, mRecord := range p.entries {
 		hRecord := mRecord.convertRecord()
 		hRecords = append(hRecords, hRecord)
 	}
@@ -157,11 +157,11 @@ func (v *dkbParser) ConvertToHomebank(filepath string) error {
 func (d *dkbRecord) convertRecord() (h homebankRecord) {
 	h.payment = 0
 	h.date = d.buchungsdatum.Format("2006-01-02")
-	if d.betrag_eur < 0 {
+	if d.betragEUR < 0 {
 		h.payee = d.zahlungsempfaenger
 	}
 	h.memo = d.verwendungszweck
-	h.amount = d.betrag_eur
+	h.amount = d.betragEUR
 	return
 }
 

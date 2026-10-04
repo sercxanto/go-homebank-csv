@@ -180,17 +180,17 @@ func TestGetGuessedParser(t *testing.T) {
 	}
 }
 
-func TestParserErrorMessage(t *testing.T) {
+func TestParseErrorMessage(t *testing.T) {
 	cases := []struct {
-		err      ParserError
+		err      ParseError
 		expected string
 	}{
-		{ParserError{ErrorType: HeaderError}, "HeaderError"},
-		{ParserError{ErrorType: DataParsingError, Line: 3, Field: "Betrag"},
+		{ParseError{Type: HeaderError}, "HeaderError"},
+		{ParseError{Type: DataParsingError, Line: 3, Field: "Betrag"},
 			"DataParsingError in line 3 in field name 'Betrag'"},
-		{ParserError{ErrorType: IOError, Err: errors.New("permission denied")},
+		{ParseError{Type: IOError, Err: errors.New("permission denied")},
 			"IOError: permission denied"},
-		{ParserError{ErrorType: DataParsingError, Line: 5, Field: "Betrag", Err: errors.New("invalid syntax")},
+		{ParseError{Type: DataParsingError, Line: 5, Field: "Betrag", Err: errors.New("invalid syntax")},
 			"DataParsingError in line 5 in field name 'Betrag': invalid syntax"},
 	}
 
@@ -201,14 +201,14 @@ func TestParserErrorMessage(t *testing.T) {
 	}
 }
 
-func TestParserErrorUnwrap(t *testing.T) {
+func TestParseErrorUnwrap(t *testing.T) {
 	cause := errors.New("cause")
-	var err error = &ParserError{ErrorType: IOError, Err: cause}
+	var err error = &ParseError{Type: IOError, Err: cause}
 	if !errors.Is(err, cause) {
 		t.Error("Expected the cause to be found with errors.Is")
 	}
 
-	err = &ParserError{ErrorType: HeaderError}
+	err = &ParseError{Type: HeaderError}
 	if errors.Unwrap(err) != nil {
 		t.Error("Expected no underlying error")
 	}
@@ -219,8 +219,8 @@ func TestParserErrorUnwrap(t *testing.T) {
 func TestParseFileNonExistingKeepsCause(t *testing.T) {
 	for _, format := range GetSourceFormats() {
 		err := GetParser(format).ParseFile(filepath.Join("testfiles", "non_existing_file"))
-		var pError *ParserError
-		if !errors.As(err, &pError) || pError.ErrorType != IOError {
+		var pError *ParseError
+		if !errors.As(err, &pError) || pError.Type != IOError {
 			t.Errorf("%s: expected IOError, got %v", format, err)
 		}
 		if !errors.Is(err, fs.ErrNotExist) {

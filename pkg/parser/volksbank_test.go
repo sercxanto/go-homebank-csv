@@ -20,13 +20,13 @@ func TestVolksbankParseFileNonExisting(t *testing.T) {
 	if err == nil {
 		t.Error("Non existing file should return error")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != IOError {
+		if pError.Type != IOError {
 			t.Error("Expected IOError")
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 	if v.GetNumberOfEntries() != 0 {
 		t.Error("Entries should be empty")
@@ -40,13 +40,13 @@ func TestVolksbankParseFileNokNoHeader(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
-			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.Type)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(v.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -60,10 +60,10 @@ func TestVolksbankParseFileNokWrongBuchungstag(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Field != "Buchungstag" {
 			t.Errorf("Expected field 'Buchungstag', got '%s' instead", pError.Field)
@@ -72,7 +72,7 @@ func TestVolksbankParseFileNokWrongBuchungstag(t *testing.T) {
 			t.Errorf("Expected line 2, got %d", pError.Line)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(v.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -86,10 +86,10 @@ func TestVolksbankParseFileNokWrongBetrag(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Field != "Betrag" {
 			t.Errorf("Expected field 'Betrag', got '%s' instead", pError.Field)
@@ -98,7 +98,7 @@ func TestVolksbankParseFileNokWrongBetrag(t *testing.T) {
 			t.Errorf("Expected line 2, got %d", pError.Line)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(v.entries) != 0 {
 		t.Error("Entries should be empty")

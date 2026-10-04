@@ -27,21 +27,21 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 	m.entries = make([]moneywalletRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	defer infile.Close()
 	csvReader := csv.NewReader(infile)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError, Err: err}
+		return &ParseError{Type: IOError, Err: err}
 	}
 	if len(records) == 0 {
-		return &ParserError{ErrorType: HeaderError}
+		return &ParseError{Type: HeaderError}
 	}
 	if !isValidMoneyWalletHeader(records[0]) {
-		return &ParserError{
-			ErrorType: HeaderError,
-			Line:      1,
+		return &ParseError{
+			Type: HeaderError,
+			Line: 1,
 		}
 	}
 	// Only header found, no entries
@@ -52,11 +52,11 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 	for lineNr, row := range records[1:] {
 		date, err := time.Parse("2006-01-02 15:04:05", row[3])
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      lineNr + 2,
-				Field:     "datetime",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  lineNr + 2,
+				Field: "datetime",
+				Err:   err,
 			}
 		}
 
@@ -64,11 +64,11 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 		var money float64
 		money, err = strconv.ParseFloat(strings.TrimSpace(moneyString), 64)
 		if err != nil {
-			return &ParserError{
-				ErrorType: DataParsingError,
-				Line:      lineNr + 2,
-				Field:     "money",
-				Err:       err,
+			return &ParseError{
+				Type:  DataParsingError,
+				Line:  lineNr + 2,
+				Field: "money",
+				Err:   err,
 			}
 		}
 

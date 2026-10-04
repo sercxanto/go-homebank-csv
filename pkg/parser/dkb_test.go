@@ -20,13 +20,13 @@ func TestDkbParseFileNonExisting(t *testing.T) {
 	if err == nil {
 		t.Error("Non existing file should return error")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != IOError {
+		if pError.Type != IOError {
 			t.Error("Expected IOError")
 		}
 	} else {
-		t.Error("Expected ParserError")
+		t.Error("Expected ParseError")
 	}
 	if v.GetNumberOfEntries() != 0 {
 		t.Error("Entries should be empty")
@@ -40,13 +40,13 @@ func TestDkbParseFileNok(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
-			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.Type)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -60,16 +60,16 @@ func TestDkbParseFileNokInvalidHeader(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != HeaderError {
-			t.Errorf("HeaderError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != HeaderError {
+			t.Errorf("HeaderError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 0 {
 			t.Errorf("Expected error on line 0, got %d", pError.Line)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -83,10 +83,10 @@ func TestDkbParseFileNokWrongBuchungsdatum(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 5 {
 			t.Errorf("Expected error on line 5, got %d", pError.Line)
@@ -95,7 +95,7 @@ func TestDkbParseFileNokWrongBuchungsdatum(t *testing.T) {
 			t.Errorf("Expected error on field 'Buchungsdatum', got '%s'", pError.Field)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -109,10 +109,10 @@ func TestDkbParseFileNokWrongWertstellung(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 5 {
 			t.Errorf("Expected error on line 5, got %d", pError.Line)
@@ -121,7 +121,7 @@ func TestDkbParseFileNokWrongWertstellung(t *testing.T) {
 			t.Errorf("Expected error on field 'Wertstellung', got '%s'", pError.Field)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -135,10 +135,10 @@ func TestDkbParseFileNokWrongBetrag(t *testing.T) {
 	if err == nil {
 		t.Error("Should fail")
 	}
-	var pError *ParserError
+	var pError *ParseError
 	if errors.As(err, &pError) {
-		if pError.ErrorType != DataParsingError {
-			t.Errorf("DataParsingError expected, got '%s' instead", pError.ErrorType)
+		if pError.Type != DataParsingError {
+			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
 		if pError.Line != 5 {
 			t.Errorf("Expected error on line 5, got %d", pError.Line)
@@ -147,7 +147,7 @@ func TestDkbParseFileNokWrongBetrag(t *testing.T) {
 			t.Errorf("Expected error on field 'Betrag (€)', got '%s'", pError.Field)
 		}
 	} else {
-		t.Error("ParserError expected")
+		t.Error("ParseError expected")
 	}
 	if len(c.entries) != 0 {
 		t.Error("Entries should be empty")
@@ -176,14 +176,14 @@ func TestDkbConvertRecord(t *testing.T) {
 		verwendungszweck:    "Verwendungszweck",
 		umsatztyp:           "Ausgang",
 		iban:                "DE12345678901234567890",
-		betrag_eur:          -1000.0,
-		glaeubigerId:        "DE98ZZZ09999999999",
+		betragEUR:           -1000.0,
+		glaeubigerID:        "DE98ZZZ09999999999",
 		mandatsreferenz:     "Mandatsreferenz",
 		kundenreferenz:      "Kundenreferenz",
 	}
 	h := d.convertRecord()
-	if h.amount != d.betrag_eur {
-		t.Errorf("Expected amount to be %f, got %f", d.betrag_eur, h.amount)
+	if h.amount != d.betragEUR {
+		t.Errorf("Expected amount to be %f, got %f", d.betragEUR, h.amount)
 	}
 	if h.date != "2024-12-13" {
 		t.Errorf("Expected date to be 2024-12-13, got '%s'", h.date)

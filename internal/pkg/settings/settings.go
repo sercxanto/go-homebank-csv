@@ -52,18 +52,18 @@ func (s *BatchConvertSet) LoadFromString(str string) error {
 	return s.NormalizePaths()
 }
 
-func (settings *Settings) LoadFromString(str string) error {
+func (s *Settings) LoadFromString(str string) error {
 	// Load settings from str
-	// Parse yaml contained in str into variable settings
-	*settings = Settings{}
-	err := yaml.Unmarshal([]byte(str), settings)
+	// Parse yaml contained in str into variable s
+	*s = Settings{}
+	err := yaml.Unmarshal([]byte(str), s)
 	if err != nil {
 		return err
 	}
-	return settings.NormalizePaths()
+	return s.NormalizePaths()
 }
 
-func (settings *Settings) LoadFromFile(filePath string) error {
+func (s *Settings) LoadFromFile(filePath string) error {
 
 	// Open file filePath for reading
 	file, err := os.Open(filePath)
@@ -78,21 +78,21 @@ func (settings *Settings) LoadFromFile(filePath string) error {
 		return err
 	}
 
-	*settings = Settings{}
-	err = yaml.Unmarshal(content, settings)
+	*s = Settings{}
+	err = yaml.Unmarshal(content, s)
 	if err != nil {
 		return err
 	}
-	return settings.NormalizePaths()
+	return s.NormalizePaths()
 }
 
 // LoadFromDefaultFile loads settings from default config file.
-func (settings *Settings) LoadFromDefaultFile() (string, error) {
+func (s *Settings) LoadFromDefaultFile() (string, error) {
 	configFilePath, err := xdg.SearchConfigFile(defaultConfigFilePath)
 	if err != nil {
 		return "", err
 	}
-	return configFilePath, settings.LoadFromFile(configFilePath)
+	return configFilePath, s.LoadFromFile(configFilePath)
 }
 
 // CheckValidity reports whether a the whole settings are valid

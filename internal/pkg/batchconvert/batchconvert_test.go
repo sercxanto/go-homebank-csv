@@ -138,13 +138,13 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	defer srcFile.Close()
-	if dstFile, err := os.Create(dst); err != nil {
-		return err
-	} else {
-		defer dstFile.Close()
-		_, err = io.Copy(dstFile, srcFile)
+	dstFile, err := os.Create(dst)
+	if err != nil {
 		return err
 	}
+	defer dstFile.Close()
+	_, err = io.Copy(dstFile, srcFile)
+	return err
 }
 
 func TestFindFiles(t *testing.T) {
@@ -392,16 +392,16 @@ func TestBatchConvertConversionError(t *testing.T) {
 		t.Fatalf("status and cbStatus are not equal")
 	}
 
-	// The empty file is no valid Volksbank file, the ParserError is kept
+	// The empty file is no valid Volksbank file, the ParseError is kept
 	cbUpdateNr = 0
 	if status, err = BatchConvert(settings2, time.Now(), cb, cbUserData); err == nil {
 		t.Fatalf("BatchConvert should return error")
 	}
-	var pError *parser.ParserError
-	if !errors.As(err, &pError) || pError.ErrorType != parser.HeaderError {
+	var pError *parser.ParseError
+	if !errors.As(err, &pError) || pError.Type != parser.HeaderError {
 		t.Errorf("Expected a HeaderError in the returned error, got '%v'", err)
 	}
-	if !errors.As(status[0].Files[0].Err, &pError) || pError.ErrorType != parser.HeaderError {
+	if !errors.As(status[0].Files[0].Err, &pError) || pError.Type != parser.HeaderError {
 		t.Errorf("Expected a HeaderError in the file status, got '%v'", status[0].Files[0].Err)
 	}
 
