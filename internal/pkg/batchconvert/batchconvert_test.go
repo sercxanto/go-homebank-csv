@@ -1,6 +1,7 @@
 package batchconvert
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -376,17 +377,32 @@ func TestBatchConvertConversionError(t *testing.T) {
 		}
 	}
 
-	if status, err = BatchConvert(settings1, time.Now(), cb, cbUserData); err != nil {
-		t.Fatalf("BatchConvert should not return error")
+	// The format of the empty file cannot be guessed
+	if status, err = BatchConvert(settings1, time.Now(), cb, cbUserData); err == nil {
+		t.Fatalf("BatchConvert should return error")
+	}
+	if !strings.Contains(err.Error(), emptyFilePath) {
+		t.Errorf("Expected the error to name the failed file, got '%s'", err)
+	}
+	if status[0].Files[0].Err == nil {
+		t.Errorf("Expected the cause of the failure in the file status")
 	}
 
 	if !reflect.DeepEqual(status, cbStatus) {
 		t.Fatalf("status and cbStatus are not equal")
 	}
 
+	// The empty file is no valid Volksbank file, the ParserError is kept
 	cbUpdateNr = 0
-	if status, err = BatchConvert(settings2, time.Now(), cb, cbUserData); err != nil {
+	if status, err = BatchConvert(settings2, time.Now(), cb, cbUserData); err == nil {
 		t.Fatalf("BatchConvert should return error")
+	}
+	var pError *parser.ParserError
+	if !errors.As(err, &pError) || pError.ErrorType != parser.HeaderError {
+		t.Errorf("Expected a HeaderError in the returned error, got '%v'", err)
+	}
+	if !errors.As(status[0].Files[0].Err, &pError) || pError.ErrorType != parser.HeaderError {
+		t.Errorf("Expected a HeaderError in the file status, got '%v'", status[0].Files[0].Err)
 	}
 
 	if !reflect.DeepEqual(status, cbStatus) {

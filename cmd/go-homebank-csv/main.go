@@ -100,7 +100,7 @@ func (c *BatchConvertCmd) Run() error {
 					case batchconvert.ConversionSuccess:
 						fmt.Println("  Success:", f.InputFile)
 					case batchconvert.ConversionError:
-						fmt.Println("  Failed:", f.InputFile)
+						fmt.Println("  Failed:", f.InputFile+":", f.Err)
 					case batchconvert.Skipped:
 						fmt.Println("  Skipped:", f.InputFile)
 					}
@@ -112,7 +112,7 @@ func (c *BatchConvertCmd) Run() error {
 	fmt.Println("BatchConvert starting ...")
 	_, err = batchconvert.BatchConvert(s.BatchConvert, time.Now(), cb, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("BatchConvert finished with errors:\n%w", err)
 	}
 	fmt.Println("BatchConvert finished")
 	return nil

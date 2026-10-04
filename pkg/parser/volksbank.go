@@ -28,7 +28,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	m.entries = make([]volksbankRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	defer infile.Close()
 	bomStripped := transform.NewReader(infile, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
@@ -36,7 +36,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	csvReader.Comma = ';'
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	if len(records) == 0 {
 		return &ParserError{ErrorType: HeaderError}
@@ -61,6 +61,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + 2,
 				Field:     "Buchungstag",
+				Err:       err,
 			}
 		}
 		betragString := strings.ReplaceAll(row[11], ",", ".")
@@ -71,6 +72,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + 2,
 				Field:     "Betrag",
+				Err:       err,
 			}
 		}
 		vRecord := volksbankRecord{
