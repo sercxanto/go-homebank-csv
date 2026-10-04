@@ -4,7 +4,9 @@
 package parser
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -216,17 +218,52 @@ func sanitizeHomebankField(value string) string {
 	return value
 }
 
+// homebankTempSuffix is appended to the output file name while it is written
+const homebankTempSuffix = ".tmp"
+
 // writeHomeBankRecords writes a slice of HomebankRecord to a CSV file
 // See "Transaction import CSV format" under http://homebank.free.fr/help/misc-csvformat.html
-func writeHomeBankRecords(records []homebankRecord, filepath string) error {
-	outfile, err := os.Create(filepath)
+//
+// The records are written to a temporary file next to the output file, which
+// is renamed to the output file name only after it has been written and closed
+// successfully. So a failure while writing, e.g. a full disk, never leaves an
+// incomplete output file behind. batchconvert relies on this, as it skips
+// input files whose output file already exists.
+func writeHomeBankRecords(records []homebankRecord, filepath string) (err error) {
+	tempPath := filepath + homebankTempSuffix
+	// O_EXCL does not overwrite an unrelated file which happens to have the
+	// name of the temporary file
+	tempFile, err := os.OpenFile(tempPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 	if err != nil {
 		return err
 	}
-	defer outfile.Close()
+	defer func() {
+		if err != nil {
+			// Closing a second time fails harmlessly if it is already closed
+			_ = tempFile.Close()
+			_ = os.Remove(tempPath)
+		}
+	}()
 
+	writer := bufio.NewWriter(tempFile)
+	if err = writeHomeBankCSV(writer, records); err != nil {
+		return err
+	}
+	if err = writer.Flush(); err != nil {
+		return err
+	}
+	// Close reports errors of writes which have been delayed by the OS, so
+	// it has to be checked before the file is considered complete
+	if err = tempFile.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tempPath, filepath)
+}
+
+// writeHomeBankCSV writes the header and the records in the homebank CSV format
+func writeHomeBankCSV(w io.Writer, records []homebankRecord) error {
 	header := "date;payment;info;payee;memo;amount;category;tags"
-	_, err = fmt.Fprintln(outfile, header)
+	_, err := fmt.Fprintln(w, header)
 	if err != nil {
 		return err
 	}
@@ -242,7 +279,7 @@ func writeHomeBankRecords(records []homebankRecord, filepath string) error {
 			rec.amount,
 			sanitizeHomebankField(rec.category),
 			sanitizeHomebankField(rec.tags))
-		_, err := fmt.Fprintln(outfile, line)
+		_, err := fmt.Fprintln(w, line)
 		if err != nil {
 			return err
 		}
