@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -291,7 +292,7 @@ func TestWriteHomeBankRecordsRemovesTempFileOnError(t *testing.T) {
 	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err == nil {
 		t.Error("Expected an error when the output path is a directory")
 	}
-	if _, err := os.Stat(fpath + homebankTempSuffix); !errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Stat(fpath + tempFileSuffix); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("Expected the temporary file to be removed, got %v", err)
 	}
 }
@@ -300,7 +301,7 @@ func TestWriteHomeBankRecordsRemovesTempFileOnError(t *testing.T) {
 // overwritten nor removed
 func TestWriteHomeBankRecordsKeepsExistingTempFile(t *testing.T) {
 	fpath := filepath.Join(t.TempDir(), "output.csv")
-	tempPath := fpath + homebankTempSuffix
+	tempPath := fpath + tempFileSuffix
 	if err := os.WriteFile(tempPath, []byte("unrelated\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -317,16 +318,52 @@ func TestWriteHomeBankRecordsKeepsExistingTempFile(t *testing.T) {
 	}
 }
 
-// failingWriter fails every write
-type failingWriter struct{}
-
-func (failingWriter) Write([]byte) (int, error) {
-	return 0, errors.New("write failed")
+// failingWriter fails all writes after the first okWrites ones
+type failingWriter struct {
+	okWrites int
 }
 
-// An error while writing is passed on instead of being ignored
+func (w *failingWriter) Write(p []byte) (int, error) {
+	if w.okWrites <= 0 {
+		return 0, errors.New("write failed")
+	}
+	w.okWrites--
+	return len(p), nil
+}
+
+// An error while writing the header or a record is passed on instead of
+// being ignored
 func TestWriteHomeBankCSVWriteError(t *testing.T) {
-	if err := writeHomeBankCSV(failingWriter{}, testHomebankRecords()); err == nil {
-		t.Error("Expected the write error to be returned")
+	for okWrites := range 2 {
+		err := writeHomeBankCSV(&failingWriter{okWrites: okWrites}, testHomebankRecords())
+		if err == nil {
+			t.Errorf("Expected the write error to be returned after %d successful writes", okWrites)
+		}
+	}
+}
+
+// If writing the content fails, neither the output file nor the temporary
+// file is left behind and the error is passed on
+func TestWriteFileAtomicallyWriteError(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "output.csv")
+	writeErr := errors.New("write failed")
+
+	err := writeFileAtomically(fpath, func(w io.Writer) error {
+		if _, err := io.WriteString(w, "partial content"); err != nil {
+			return err
+		}
+		return writeErr
+	})
+
+	if !errors.Is(err, writeErr) {
+		t.Errorf("Expected the write error, got %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Expected an empty output directory, got %v", entries)
 	}
 }
