@@ -34,7 +34,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	m.entries = make([]comdirectRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	defer infile.Close()
 
@@ -44,7 +44,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 
 	var headerIndex = -1
@@ -72,6 +72,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + headerIndex + 2,
 				Field:     "Buchungstag",
+				Err:       err,
 			}
 		}
 		umsatzString := strings.ReplaceAll(row[4], ".", "")
@@ -83,6 +84,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + headerIndex + 2,
 				Field:     "Umsatz in EUR",
+				Err:       err,
 			}
 		}
 

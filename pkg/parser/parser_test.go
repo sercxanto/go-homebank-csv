@@ -1,9 +1,12 @@
 package parser
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -173,5 +176,63 @@ func TestGetGuessedParser(t *testing.T) {
 		if p != nil && p.GetFormat() != format {
 			t.Errorf("Parser not correct, expected: %s, got: %s", format, p.GetFormat())
 		}
+	}
+}
+
+func TestParserErrorMessage(t *testing.T) {
+	cases := []struct {
+		err      ParserError
+		expected string
+	}{
+		{ParserError{ErrorType: HeaderError}, "HeaderError"},
+		{ParserError{ErrorType: DataParsingError, Line: 3, Field: "Betrag"},
+			"DataParsingError in line 3 in field name 'Betrag'"},
+		{ParserError{ErrorType: IOError, Err: errors.New("permission denied")},
+			"IOError: permission denied"},
+		{ParserError{ErrorType: DataParsingError, Line: 5, Field: "Betrag", Err: errors.New("invalid syntax")},
+			"DataParsingError in line 5 in field name 'Betrag': invalid syntax"},
+	}
+
+	for _, c := range cases {
+		if got := c.err.Error(); got != c.expected {
+			t.Errorf("Expected %q, got %q", c.expected, got)
+		}
+	}
+}
+
+func TestParserErrorUnwrap(t *testing.T) {
+	cause := errors.New("cause")
+	var err error = &ParserError{ErrorType: IOError, Err: cause}
+	if !errors.Is(err, cause) {
+		t.Error("Expected the cause to be found with errors.Is")
+	}
+
+	err = &ParserError{ErrorType: HeaderError}
+	if errors.Unwrap(err) != nil {
+		t.Error("Expected no underlying error")
+	}
+}
+
+// Every parser keeps the cause of a failed file access, so that callers can
+// tell e.g. a missing file from a file without permission
+func TestParseFileNonExistingKeepsCause(t *testing.T) {
+	for _, format := range GetSourceFormats() {
+		err := GetParser(format).ParseFile(filepath.Join("testfiles", "non_existing_file"))
+		var pError *ParserError
+		if !errors.As(err, &pError) || pError.ErrorType != IOError {
+			t.Errorf("%s: expected IOError, got %v", format, err)
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("%s: expected fs.ErrNotExist in the error chain, got %v", format, err)
+		}
+	}
+}
+
+// A malformed value keeps the error of the conversion function as cause
+func TestParseFileDataParsingErrorKeepsCause(t *testing.T) {
+	err := GetParser(DKB).ParseFile(filepath.Join("testfiles", "dkb", "dkb_nok_wrongbetrag.csv"))
+	var numError *strconv.NumError
+	if !errors.As(err, &numError) {
+		t.Errorf("Expected strconv.NumError in the error chain, got %v", err)
 	}
 }

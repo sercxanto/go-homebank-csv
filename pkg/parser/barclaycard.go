@@ -86,12 +86,13 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 	b.entries = make([]barclaycardRecord, 0)
 	f, err := excelize.OpenFile(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	rows, err := f.GetRows("Sheet1")
 	if err != nil {
 		return &ParserError{
 			ErrorType: HeaderError,
+			Err:       err,
 		}
 	}
 
@@ -113,6 +114,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 					ErrorType: DataParsingError,
 					Line:      lineNr + 1,
 					Field:     "Buchungsdatum(1)/Transaktionsdatum",
+					Err:       err,
 				}
 			}
 
@@ -128,6 +130,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 					ErrorType: DataParsingError,
 					Line:      lineNr + 1,
 					Field:     "Buchungsdatum",
+					Err:       err,
 				}
 			}
 
@@ -137,6 +140,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 					ErrorType: DataParsingError,
 					Line:      lineNr + 1,
 					Field:     "Betrag",
+					Err:       err,
 				}
 			}
 

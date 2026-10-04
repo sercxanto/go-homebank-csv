@@ -125,6 +125,11 @@ type ParserError struct {
 
 	// Optional field name where the error occured
 	Field string
+
+	// Optional underlying error which caused this error, e.g. the error
+	// returned by os.Open or strconv.ParseFloat. It is accessible with
+	// errors.Is and errors.As through Unwrap.
+	Err error
 }
 
 func (e *ParserError) Error() string {
@@ -136,7 +141,15 @@ func (e *ParserError) Error() string {
 	if len(e.Field) > 0 {
 		msg += fmt.Sprintf(" in field name '%s'", e.Field)
 	}
+	if e.Err != nil {
+		msg += ": " + e.Err.Error()
+	}
 	return msg
+}
+
+// Unwrap returns the underlying error, nil if there is none
+func (e *ParserError) Unwrap() error {
+	return e.Err
 }
 
 // Parser is the interface to be implemented by all parsers

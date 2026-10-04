@@ -27,13 +27,13 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 	m.entries = make([]moneywalletRecord, 0)
 	infile, err := os.Open(filepath)
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	defer infile.Close()
 	csvReader := csv.NewReader(infile)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return &ParserError{ErrorType: IOError}
+		return &ParserError{ErrorType: IOError, Err: err}
 	}
 	if len(records) == 0 {
 		return &ParserError{ErrorType: HeaderError}
@@ -56,6 +56,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + 2,
 				Field:     "datetime",
+				Err:       err,
 			}
 		}
 
@@ -67,6 +68,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 				ErrorType: DataParsingError,
 				Line:      lineNr + 2,
 				Field:     "money",
+				Err:       err,
 			}
 		}
 

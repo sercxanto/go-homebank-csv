@@ -3,6 +3,7 @@ package batchconvert
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -78,6 +79,7 @@ type FileStatus struct {
 	OutputFile string               // Absolute path of the output file. Only set after conversion started.
 	Status     ConversionStatus     // Status of the conversion
 	Format     *parser.SourceFormat // Detected source format
+	Err        error                // Cause of the failure if Status is ConversionError
 }
 
 // Conversion status of a batch
@@ -121,6 +123,10 @@ type StatusCallback func(s BatchStatus, userData interface{})
 //
 // The converted files are placed in the output directory. The conversion happens only
 // if the file with the same name does not exist yet in the output directory.
+//
+// A file which fails to convert does not stop the conversion of the remaining
+// files. Its cause is reported in FileStatus.Err and, together with the causes
+// of all other failed files, in the returned error.
 func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallback, userData interface{}) (status BatchStatus, err error) {
 
 	if len(s.Sets) == 0 {
@@ -135,14 +141,17 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		return nil, err
 	}
 
+	// Causes of the failed files, prefixed with the file name
+	var fileErrors []error
+
 	for setNr, set := range s.Sets {
 		var fileInfo os.FileInfo
 		fileInfo, err = os.Stat(set.OutputDir)
 		if err != nil {
-			return status, err
+			return status, errors.Join(append(fileErrors, err)...)
 		}
 		if !fileInfo.IsDir() {
-			return status, errors.New("outputDir is not a directory")
+			return status, errors.Join(append(fileErrors, errors.New("outputDir is not a directory"))...)
 		}
 
 		status = append(status, BatchSetStatus{
@@ -153,7 +162,7 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		var fileList []string
 		fileList, err = findFiles(set.InputDir, set.FileGlobPattern, getTimeFromMaxAgeDays(uint(set.FileMaxAgeDays), now))
 		if err != nil {
-			return status, err
+			return status, errors.Join(append(fileErrors, err)...)
 		}
 
 		for _, infile := range fileList {
@@ -189,7 +198,10 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 			if set.Format == nil {
 				fileParser = parser.GetGuessedParser(infile)
 				if fileParser == nil {
+					err := errors.New("cannot deduce format")
 					status[setNr].Files[fileNr].Status = ConversionError
+					status[setNr].Files[fileNr].Err = err
+					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
 					if c != nil {
 						c(status, userData)
 					}
@@ -199,6 +211,8 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 				fileParser = parser.GetParser(*set.Format)
 				if err := fileParser.ParseFile(infile); err != nil {
 					status[setNr].Files[fileNr].Status = ConversionError
+					status[setNr].Files[fileNr].Err = err
+					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
 					if c != nil {
 						c(status, userData)
 					}
@@ -208,6 +222,8 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 			status[setNr].Files[fileNr].Format = parser.NewSourceFormat(fileParser.GetFormat())
 			if err := fileParser.ConvertToHomebank(outfile); err != nil {
 				status[setNr].Files[fileNr].Status = ConversionError
+				status[setNr].Files[fileNr].Err = err
+				fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
 				if c != nil {
 					c(status, userData)
 				}
@@ -220,6 +236,5 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 
 		}
 	}
-	return
-
+	return status, errors.Join(fileErrors...)
 }

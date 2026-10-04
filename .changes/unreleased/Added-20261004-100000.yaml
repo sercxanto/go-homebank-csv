@@ -1,0 +1,3 @@
+kind: Added
+body: Show the cause of a failed conversion, e.g. the file system error or the malformed value, and keep it accessible in `ParserError.Err` for `errors.Is` and `errors.As`
+time: 2026-10-04T10:00:00.000000000Z
