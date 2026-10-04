@@ -176,14 +176,14 @@ func TestDkbConvertRecord(t *testing.T) {
 		verwendungszweck:    "Verwendungszweck",
 		umsatztyp:           "Ausgang",
 		iban:                "DE12345678901234567890",
-		betrag_eur:          -1000.0,
-		glaeubigerId:        "DE98ZZZ09999999999",
+		betragEUR:           -1000.0,
+		glaeubigerID:        "DE98ZZZ09999999999",
 		mandatsreferenz:     "Mandatsreferenz",
 		kundenreferenz:      "Kundenreferenz",
 	}
 	h := d.convertRecord()
-	if h.amount != d.betrag_eur {
-		t.Errorf("Expected amount to be %f, got %f", d.betrag_eur, h.amount)
+	if h.amount != d.betragEUR {
+		t.Errorf("Expected amount to be %f, got %f", d.betragEUR, h.amount)
 	}
 	if h.date != "2024-12-13" {
 		t.Errorf("Expected date to be 2024-12-13, got '%s'", h.date)

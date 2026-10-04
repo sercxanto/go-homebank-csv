@@ -34,13 +34,13 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	defer srcFile.Close()
-	if dstFile, err := os.Create(dst); err != nil {
-		return err
-	} else {
-		defer dstFile.Close()
-		_, err = io.Copy(dstFile, srcFile)
+	dstFile, err := os.Create(dst)
+	if err != nil {
 		return err
 	}
+	defer dstFile.Close()
+	_, err = io.Copy(dstFile, srcFile)
+	return err
 }
 
 func normalizeExpectedPath(path string) string {

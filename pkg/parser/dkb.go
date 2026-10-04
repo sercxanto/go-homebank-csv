@@ -32,8 +32,8 @@ type dkbRecord struct {
 	verwendungszweck    string
 	umsatztyp           string
 	iban                string
-	betrag_eur          float64
-	glaeubigerId        string
+	betragEUR           float64
+	glaeubigerID        string
 	mandatsreferenz     string
 	kundenreferenz      string
 }
@@ -118,12 +118,12 @@ func (p *dkbParser) ParseFile(filepath string) error {
 			verwendungszweck:    row[5],
 			umsatztyp:           row[6],
 			iban:                row[7],
-			betrag_eur:          amount,
-			glaeubigerId:        row[9],
+			betragEUR:           amount,
+			glaeubigerID:        row[9],
 			mandatsreferenz:     row[10],
 			kundenreferenz:      row[11],
 		}
-		if dRecord.umsatztyp == "Eingang" && dRecord.betrag_eur == 0 && dRecord.zahlungspflichtiger == "DKB AG" && dRecord.zahlungsempfaenger == "DKB AG" {
+		if dRecord.umsatztyp == "Eingang" && dRecord.betragEUR == 0 && dRecord.zahlungspflichtiger == "DKB AG" && dRecord.zahlungsempfaenger == "DKB AG" {
 			continue
 		}
 		p.entries = append(p.entries, dRecord)
@@ -131,17 +131,17 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (d *dkbParser) GetFormat() SourceFormat {
+func (p *dkbParser) GetFormat() SourceFormat {
 	return DKB
 }
 
-func (d *dkbParser) GetNumberOfEntries() int {
-	return len(d.entries)
+func (p *dkbParser) GetNumberOfEntries() int {
+	return len(p.entries)
 }
 
-func (v *dkbParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(v.entries))
-	for _, mRecord := range v.entries {
+func (p *dkbParser) ConvertToHomebank(filepath string) error {
+	hRecords := make([]homebankRecord, 0, len(p.entries))
+	for _, mRecord := range p.entries {
 		hRecord := mRecord.convertRecord()
 		hRecords = append(hRecords, hRecord)
 	}
@@ -157,11 +157,11 @@ func (v *dkbParser) ConvertToHomebank(filepath string) error {
 func (d *dkbRecord) convertRecord() (h homebankRecord) {
 	h.payment = 0
 	h.date = d.buchungsdatum.Format("2006-01-02")
-	if d.betrag_eur < 0 {
+	if d.betragEUR < 0 {
 		h.payee = d.zahlungsempfaenger
 	}
 	h.memo = d.verwendungszweck
-	h.amount = d.betrag_eur
+	h.amount = d.betragEUR
 	return
 }
 

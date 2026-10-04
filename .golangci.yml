@@ -1,5 +1,17 @@
 version: "2"
 linters:
+  # In addition to the default linters errcheck, govet, ineffassign,
+  # staticcheck and unused
+  enable:
+    # Errors compared with == or type assertions instead of errors.Is and
+    # errors.As, which miss wrapped errors
+    - errorlint
+    # Common style issues and simplifications
+    - gocritic
+    # Misspelled English words in comments and strings
+    - misspell
+    # Go naming and style conventions, e.g. consistent receiver names
+    - revive
   exclusions:
     generated: lax
     presets:

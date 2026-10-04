@@ -95,6 +95,8 @@ func NewSourceFormat(value SourceFormat) *SourceFormat {
 }
 
 // A ParserErrorType describes the type of error
+//
+//nolint:revive // Renaming the exported type would break the public API
 type ParserErrorType int
 
 const (
@@ -117,6 +119,8 @@ func (e ParserErrorType) String() string {
 }
 
 // ParserError describes the error which could occur during parsing
+//
+//nolint:revive // Renaming the exported type would break the public API
 type ParserError struct {
 	ErrorType ParserErrorType
 
@@ -125,7 +129,7 @@ type ParserError struct {
 	// when no header has been found. Empty lines are not counted.
 	Line int
 
-	// Optional field name where the error occured
+	// Optional field name where the error occurred
 	Field string
 
 	// Optional underlying error which caused this error, e.g. the error

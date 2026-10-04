@@ -153,11 +153,9 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				description:     barclaycardCell(row, 14),
 			}
 			b.entries = append(b.entries, bRecord)
-		} else {
-			if isValidBarclaycardHeader(row) {
-				inDataSection = true
-				dataSectionFound = true
-			}
+		} else if isValidBarclaycardHeader(row) {
+			inDataSection = true
+			dataSectionFound = true
 		}
 	}
 	if !dataSectionFound {

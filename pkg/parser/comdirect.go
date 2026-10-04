@@ -23,7 +23,7 @@ type comdirectRecord struct {
 	empfaenger       string // parsed from fullBuchungstext
 	ktoIBAN          string // parsed from fullBuchungstext
 	blzBic           string // parsed from fullBuchungstext
-	umsatz_eur       float64
+	umsatzEUR        float64
 }
 
 type comdirectParser struct {
@@ -92,7 +92,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 			buchungstag:      date,
 			vorgang:          row[2],
 			fullBuchungstext: row[3],
-			umsatz_eur:       umsatz,
+			umsatzEUR:        umsatz,
 		}
 
 		listOfFields := []string{"Auftraggeber", "Buchungstext", "Empfänger", "Kto/IBAN", "BLZ/BIC"}
@@ -128,9 +128,9 @@ func (m *comdirectParser) GetNumberOfEntries() int {
 	return len(m.entries)
 }
 
-func (v *comdirectParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(v.entries))
-	for _, mRecord := range v.entries {
+func (m *comdirectParser) ConvertToHomebank(filepath string) error {
+	hRecords := make([]homebankRecord, 0, len(m.entries))
+	for _, mRecord := range m.entries {
 		hRecord := mRecord.convertRecord()
 		hRecords = append(hRecords, hRecord)
 	}
@@ -246,7 +246,7 @@ Example:
 	{
 		"date": ISO 8601 date string like "2006-01-02"
 		"payee": "empfängername",
-		"info": "first three space seperated words of buchungstext",
+		"info": "first three space separated words of buchungstext",
 		"memo": "the full buchungstext",
 		"amount": 12.34,
 	}
@@ -254,7 +254,7 @@ Example:
 func (c *comdirectRecord) convertRecord() (h homebankRecord) {
 	h.payment = 0
 	h.date = c.buchungstag.Format("2006-01-02")
-	h.amount = c.umsatz_eur
+	h.amount = c.umsatzEUR
 	h.memo = c.fullBuchungstext
 	h.info = getFirstNWords(3, c.buchungstext)
 

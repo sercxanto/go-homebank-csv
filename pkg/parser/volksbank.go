@@ -95,9 +95,9 @@ func (m *volksbankParser) GetNumberOfEntries() int {
 	return len(m.entries)
 }
 
-func (v *volksbankParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(v.entries))
-	for _, mRecord := range v.entries {
+func (m *volksbankParser) ConvertToHomebank(filepath string) error {
+	hRecords := make([]homebankRecord, 0, len(m.entries))
+	for _, mRecord := range m.entries {
 		hRecord := mRecord.convertRecord()
 		hRecords = append(hRecords, hRecord)
 	}

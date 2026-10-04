@@ -150,10 +150,10 @@ func TestComdirectConvertRecord(t *testing.T) {
 		buchungstext:     "Der Buchungstext 123 456",
 		auftraggeber:     "auftragname",
 		empfaenger:       "",
-		umsatz_eur:       -139.40,
+		umsatzEUR:        -139.40,
 	}
 	h := c.convertRecord()
-	if h.amount != c.umsatz_eur {
+	if h.amount != c.umsatzEUR {
 		t.Error("Amount does not match")
 	}
 	if h.date != "2019-08-05" {
