@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -234,5 +235,135 @@ func TestParseFileDataParsingErrorKeepsCause(t *testing.T) {
 	var numError *strconv.NumError
 	if !errors.As(err, &numError) {
 		t.Errorf("Expected strconv.NumError in the error chain, got %v", err)
+	}
+}
+
+// testHomebankRecords returns a single record for the tests of
+// writeHomeBankRecords
+func testHomebankRecords() []homebankRecord {
+	return []homebankRecord{{date: "2024-01-01", memo: "memo", amount: -1.5}}
+}
+
+// A successful write leaves only the output file, no temporary file
+func TestWriteHomeBankRecordsNoTempFileLeft(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "output.csv")
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err != nil {
+		t.Fatal(err)
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "output.csv" {
+		t.Errorf("Expected only 'output.csv' in the output directory, got %v", entries)
+	}
+}
+
+// An existing output file is replaced, as before the temporary file was used
+func TestWriteHomeBankRecordsReplacesExistingFile(t *testing.T) {
+	fpath := filepath.Join(t.TempDir(), "output.csv")
+	if err := os.WriteFile(fpath, []byte("old content\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err != nil {
+		t.Fatal(err)
+	}
+
+	content, err := os.ReadFile(fpath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(content), "date;payment;") {
+		t.Errorf("Expected the existing file to be replaced, got %q", content)
+	}
+}
+
+// If the output file cannot be put in place, here because a directory has
+// its name, the temporary file is removed again
+func TestWriteHomeBankRecordsRemovesTempFileOnError(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "output.csv")
+	if err := os.Mkdir(fpath, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err == nil {
+		t.Error("Expected an error when the output path is a directory")
+	}
+	if _, err := os.Stat(fpath + tempFileSuffix); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected the temporary file to be removed, got %v", err)
+	}
+}
+
+// A file which happens to have the name of the temporary file is neither
+// overwritten nor removed
+func TestWriteHomeBankRecordsKeepsExistingTempFile(t *testing.T) {
+	fpath := filepath.Join(t.TempDir(), "output.csv")
+	tempPath := fpath + tempFileSuffix
+	if err := os.WriteFile(tempPath, []byte("unrelated\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); !errors.Is(err, fs.ErrExist) {
+		t.Errorf("Expected fs.ErrExist, got %v", err)
+	}
+	content, err := os.ReadFile(tempPath)
+	if err != nil || string(content) != "unrelated\n" {
+		t.Errorf("Expected the existing file to be kept, got %q, %v", content, err)
+	}
+	if _, err := os.Stat(fpath); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected no output file, got %v", err)
+	}
+}
+
+// failingWriter fails all writes after the first okWrites ones
+type failingWriter struct {
+	okWrites int
+}
+
+func (w *failingWriter) Write(p []byte) (int, error) {
+	if w.okWrites <= 0 {
+		return 0, errors.New("write failed")
+	}
+	w.okWrites--
+	return len(p), nil
+}
+
+// An error while writing the header or a record is passed on instead of
+// being ignored
+func TestWriteHomeBankCSVWriteError(t *testing.T) {
+	for okWrites := range 2 {
+		err := writeHomeBankCSV(&failingWriter{okWrites: okWrites}, testHomebankRecords())
+		if err == nil {
+			t.Errorf("Expected the write error to be returned after %d successful writes", okWrites)
+		}
+	}
+}
+
+// If writing the content fails, neither the output file nor the temporary
+// file is left behind and the error is passed on
+func TestWriteFileAtomicallyWriteError(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "output.csv")
+	writeErr := errors.New("write failed")
+
+	err := writeFileAtomically(fpath, func(w io.Writer) error {
+		if _, err := io.WriteString(w, "partial content"); err != nil {
+			return err
+		}
+		return writeErr
+	})
+
+	if !errors.Is(err, writeErr) {
+		t.Errorf("Expected the write error, got %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Expected an empty output directory, got %v", entries)
 	}
 }

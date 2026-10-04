@@ -1,0 +1,3 @@
+kind: Fixed
+body: Do not leave an incomplete output file behind when writing fails, e.g. on a full disk, so that `batch-convert` does not skip the input file in later runs
+time: 2026-10-04T13:00:00.000000000Z

@@ -88,6 +88,8 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 	if err != nil {
 		return &ParserError{ErrorType: IOError, Err: err}
 	}
+	// Removes the temporary files excelize creates for large worksheets
+	defer f.Close()
 	rows, err := f.GetRows("Sheet1")
 	if err != nil {
 		return &ParserError{

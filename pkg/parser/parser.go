@@ -4,7 +4,9 @@
 package parser
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -216,17 +218,57 @@ func sanitizeHomebankField(value string) string {
 	return value
 }
 
-// writeHomeBankRecords writes a slice of HomebankRecord to a CSV file
-// See "Transaction import CSV format" under http://homebank.free.fr/help/misc-csvformat.html
-func writeHomeBankRecords(records []homebankRecord, filepath string) error {
-	outfile, err := os.Create(filepath)
+// tempFileSuffix is appended to the output file name while it is written
+const tempFileSuffix = ".tmp"
+
+// writeFileAtomically creates the file filepath with the content written by
+// write.
+//
+// The content is written to a temporary file next to filepath, which is
+// renamed to filepath only after it has been written and closed successfully.
+// So a failure while writing, e.g. a full disk, never leaves an incomplete
+// file behind. batchconvert relies on this, as it skips input files whose
+// output file already exists.
+func writeFileAtomically(filepath string, write func(w io.Writer) error) error {
+	tempPath := filepath + tempFileSuffix
+	// O_EXCL does not overwrite an unrelated file which happens to have the
+	// name of the temporary file
+	tempFile, err := os.OpenFile(tempPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 	if err != nil {
 		return err
 	}
-	defer outfile.Close()
 
+	writer := bufio.NewWriter(tempFile)
+	err = write(writer)
+	if err == nil {
+		err = writer.Flush()
+	}
+	// Close reports errors of writes which have been delayed by the OS, so
+	// it has to be checked before the file is considered complete
+	if closeErr := tempFile.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(tempPath, filepath)
+	}
+	if err != nil {
+		_ = os.Remove(tempPath)
+	}
+	return err
+}
+
+// writeHomeBankRecords writes a slice of HomebankRecord to a CSV file
+// See "Transaction import CSV format" under http://homebank.free.fr/help/misc-csvformat.html
+func writeHomeBankRecords(records []homebankRecord, filepath string) error {
+	return writeFileAtomically(filepath, func(w io.Writer) error {
+		return writeHomeBankCSV(w, records)
+	})
+}
+
+// writeHomeBankCSV writes the header and the records in the homebank CSV format
+func writeHomeBankCSV(w io.Writer, records []homebankRecord) error {
 	header := "date;payment;info;payee;memo;amount;category;tags"
-	_, err = fmt.Fprintln(outfile, header)
+	_, err := fmt.Fprintln(w, header)
 	if err != nil {
 		return err
 	}
@@ -242,7 +284,7 @@ func writeHomeBankRecords(records []homebankRecord, filepath string) error {
 			rec.amount,
 			sanitizeHomebankField(rec.category),
 			sanitizeHomebankField(rec.tags))
-		_, err := fmt.Fprintln(outfile, line)
+		_, err := fmt.Fprintln(w, line)
 		if err != nil {
 			return err
 		}
