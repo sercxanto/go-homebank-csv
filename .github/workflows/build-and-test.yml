@@ -20,10 +20,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Set up Go
-      uses: actions/setup-go@v7
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         # Keep the minor version in sync with the go directive in go.mod.
         # check-latest installs the latest patch release, which contains the
@@ -44,7 +44,7 @@ jobs:
       run: go test -v -race -coverprofile cover.out ./...
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v7
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       if: matrix.os == 'ubuntu-latest'

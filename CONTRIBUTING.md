@@ -46,6 +46,21 @@ CI and releases always get the security fixes of the standard library. When
 the minor version in `go.mod` changes, update `go-version` in all workflows as
 well.
 
+## GitHub Actions
+
+The workflows reference every action by the full commit SHA of a release,
+followed by the version as a comment:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+Unlike a tag, a commit SHA cannot be moved to different code, so a
+compromised action repository cannot change what runs in this repository's
+workflows. Dependabot updates the SHA and the comment together. Reference new
+actions the same way; `git ls-remote --tags https://github.com/<owner>/<repo>`
+lists the commit of each tag (for annotated tags the line ending in `^{}`).
+
 ## Start with a new change
 
 Call `changie new`:
