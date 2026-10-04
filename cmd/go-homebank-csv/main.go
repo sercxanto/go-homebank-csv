@@ -49,12 +49,14 @@ func (c *ConvertCmd) Run() error {
 		if p == nil {
 			return fmt.Errorf("cannot deduce format for file '%s'", c.Infile)
 		}
+		// GetGuessedParser returns the parser which has already parsed the
+		// file successfully, so the file is not parsed a second time
 		fmt.Printf("Detected format '%s'\n", p.GetFormat())
 	} else {
 		p = parser.GetParser(*c.Format)
-	}
-	if err := p.ParseFile(c.Infile); err != nil {
-		return err
+		if err := p.ParseFile(c.Infile); err != nil {
+			return err
+		}
 	}
 	fmt.Printf("Found %d entries\n", p.GetNumberOfEntries())
 	return p.ConvertToHomebank(c.Outfile)
@@ -139,7 +141,9 @@ func main() {
 	ctx := kong.Parse(&CLI, kong.Vars{"version": "go-homebank-csv " + version()})
 	err := ctx.Run()
 	if err != nil {
-		fmt.Println(err)
+		// Errors go to stderr, so that they are not mixed into redirected
+		// regular output
+		fmt.Fprintln(os.Stderr, err)
 		// Exit with a non zero code so that callers, e.g. shell scripts or
 		// cron jobs, can detect the failure
 		os.Exit(1)
