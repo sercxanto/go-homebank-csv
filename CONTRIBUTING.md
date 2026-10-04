@@ -37,6 +37,15 @@ make doc-serve
 
 It starts a server in the foreground and opens a webbrowser.
 
+## Go version
+
+The `go` directive in `go.mod` is the minimum Go version required to build
+the code. The GitHub workflows in `.github/workflows` install the latest patch
+release of the same minor version with `go-version` and `check-latest`, so that
+CI and releases always get the security fixes of the standard library. When
+the minor version in `go.mod` changes, update `go-version` in all workflows as
+well.
+
 ## Start with a new change
 
 Call `changie new`:

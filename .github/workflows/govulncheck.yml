@@ -1,0 +1,28 @@
+name: govulncheck
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  # New vulnerabilities are published independently of changes to this
+  # repository, so check weekly as well
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: golang/govulncheck-action@v1
+        with:
+          # Keep the minor version in sync with the go directive in go.mod.
+          # check-latest installs the latest patch release, so that only
+          # vulnerabilities which are not fixed yet are reported for the
+          # standard library.
+          go-version-input: '1.26'
+          check-latest: true
+          go-package: ./...
