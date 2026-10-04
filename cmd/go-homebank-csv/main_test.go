@@ -256,3 +256,22 @@ func TestMainConvertDetectedFormat(t *testing.T) {
 		t.Errorf("Output file has not been written: %v", err)
 	}
 }
+
+// An invalid configuration is rejected before any file is converted
+func TestMainBatchConvertInvalidConfig(t *testing.T) {
+	dir := t.TempDir()
+	// The input and the output directory must not be the same
+	env := writeBatchConvertConfig(t, dir, dir)
+
+	exitCode, output := runMainWithEnv(t, env, "batch-convert")
+
+	if exitCode == 0 {
+		t.Errorf("Expected non zero exit code, got %d. Output: %s", exitCode, output)
+	}
+	if !strings.Contains(output, "InputDir == OutputDir") {
+		t.Errorf("Expected the validation error in the output, got: %s", output)
+	}
+	if strings.Contains(output, "BatchConvert starting") {
+		t.Errorf("Expected no conversion to start, got: %s", output)
+	}
+}
