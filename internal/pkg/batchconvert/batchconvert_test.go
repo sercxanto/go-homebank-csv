@@ -557,6 +557,15 @@ func TestBatchConvertSkipped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to copy file '%s' to '%s'", filepath.Join(mixedExpectedDir, "Umsaetze.csv"), filepath.Join(mixedOutputDir, "Umsaetze.csv"))
 	}
+	// Make sure that the output file is newer than the input file
+	inInfo, err := os.Stat(filepath.Join(mixedInputDir, "Umsaetze.xlsx"))
+	if err != nil {
+		t.Fatalf("Failed to stat input file: %s", err)
+	}
+	outModTime := inInfo.ModTime().Add(time.Hour)
+	if err := os.Chtimes(filepath.Join(mixedOutputDir, "Umsaetze.csv"), outModTime, outModTime); err != nil {
+		t.Fatalf("Failed to set modification time: %s", err)
+	}
 
 	sMixed := settings.BatchConvertSet{
 		Name:      "mixed",
@@ -637,5 +646,98 @@ func TestBatchConvertSkipped(t *testing.T) {
 	}
 	if !areEqual {
 		t.Errorf("Output directory does not match expected directory. Reason: %s", reason)
+	}
+}
+
+// TestBatchConvertOutputOlder tests that an existing output file is replaced if
+// it is older than the input file and kept if it is not
+func TestBatchConvertOutputOlder(t *testing.T) {
+	testfilesBase, err := filepath.Abs("testfiles")
+	if err != nil {
+		t.Fatalf("Failed to get absolute path to 'testfiles': %s", err)
+	}
+	mixedExpectedDir := filepath.Join(testfilesBase, "expected_output", "mixed")
+	inputModTime := time.Date(2023, 10, 4, 12, 0, 0, 0, time.UTC)
+	staleContent := "stale output\n"
+
+	testCases := []struct {
+		name            string
+		outputModTime   time.Time
+		expectedStatus  ConversionStatus
+		expectOverwrite bool
+	}{
+		{"output older", inputModTime.Add(-time.Hour), ConversionSuccess, true},
+		{"output same age", inputModTime, Skipped, false},
+		{"output newer", inputModTime.Add(time.Hour), Skipped, false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			inputDir := filepath.Join(tmpDir, "input")
+			outputDir := filepath.Join(tmpDir, "output")
+			for _, dir := range []string{inputDir, outputDir} {
+				if err := os.Mkdir(dir, os.ModeDir|0o700); err != nil {
+					t.Fatalf("Failed to create directory '%s'", dir)
+				}
+			}
+
+			inFile := filepath.Join(inputDir, "Umsaetze.xlsx")
+			if err := copyFile(filepath.Join(testfilesBase, "input", "mixed", "Umsaetze.xlsx"), inFile); err != nil {
+				t.Fatalf("Failed to copy input file: %s", err)
+			}
+			if err := os.Chtimes(inFile, inputModTime, inputModTime); err != nil {
+				t.Fatalf("Failed to set modification time: %s", err)
+			}
+
+			outFile := filepath.Join(outputDir, "Umsaetze.csv")
+			if err := os.WriteFile(outFile, []byte(staleContent), 0o600); err != nil {
+				t.Fatalf("Failed to write output file: %s", err)
+			}
+			if err := os.Chtimes(outFile, tc.outputModTime, tc.outputModTime); err != nil {
+				t.Fatalf("Failed to set modification time: %s", err)
+			}
+
+			s := settings.BatchConvertSettings{
+				Sets: []settings.BatchConvertSet{{
+					Name:      "mixed",
+					InputDir:  inputDir,
+					OutputDir: outputDir,
+				}},
+			}
+
+			status, err := BatchConvert(s, time.Time{}, nil, nil)
+			if err != nil {
+				t.Fatalf("BatchConvert return error '%s'", err)
+			}
+			if len(status) != 1 || len(status[0].Files) != 1 {
+				t.Fatalf("BatchConvert return wrong number of files: %v", status)
+			}
+			f := status[0].Files[0]
+			if f.Status != tc.expectedStatus {
+				t.Errorf("Status is %d, expected %d", f.Status, tc.expectedStatus)
+			}
+			if f.Overwrite != tc.expectOverwrite {
+				t.Errorf("Overwrite is %t, expected %t", f.Overwrite, tc.expectOverwrite)
+			}
+
+			if tc.expectOverwrite {
+				equal, err := areFilesEqual(filepath.Join(mixedExpectedDir, "Umsaetze.csv"), outFile)
+				if err != nil {
+					t.Fatalf("areFilesEqual return error '%s'", err)
+				}
+				if !equal {
+					t.Errorf("Output file has not been replaced with the converted file")
+				}
+			} else {
+				content, err := os.ReadFile(outFile)
+				if err != nil {
+					t.Fatalf("Failed to read output file: %s", err)
+				}
+				if string(content) != staleContent {
+					t.Errorf("Output file has been modified")
+				}
+			}
+		})
 	}
 }

@@ -98,7 +98,11 @@ func (c *BatchConvertCmd) Run() error {
 					case batchconvert.ConversionInProgress:
 						fmt.Println("  In Progress:", f.InputFile)
 					case batchconvert.ConversionSuccess:
-						fmt.Println("  Success:", f.InputFile)
+						if f.Overwrite {
+							fmt.Println("  Updated:", f.InputFile)
+						} else {
+							fmt.Println("  Success:", f.InputFile)
+						}
 					case batchconvert.ConversionError:
 						fmt.Println("  Failed:", f.InputFile+":", f.Err)
 					case batchconvert.Skipped:

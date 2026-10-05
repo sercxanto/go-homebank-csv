@@ -161,10 +161,16 @@ go-homebank-csv batchconvert
 * Search in directory "/home/user/finance/barclaycard/xlsx" for files matching "*.xlsx"
   which have been modified not longer ago than 3 days
 * Check if a file with the same basename is already at "/home/user/finance/barclaycard/homebankcsv"
+  and is not older than the input file
 * If this is not the case convert the found files using the same base name with
   an extention ".csv" and store them at "/home/user/finance/barclaycard/homebankcsv"
 * Search in directory "/home/user/finance/volksbank/csv" for files matching "*.csv"
   which have been modified not longer ago than 2 days
 * Check if a file with the same basename is already at "/home/user/finance/volksbank/homebankcsv"
+  and is not older than the input file
 * If this is not the case convert the found files using the same base name with
   an extention ".csv" and store them at "/home/user/finance/volksbank/homebankcsv"
+
+If an input file is newer than the already existing output file, e.g. because
+it has been downloaded again after a faulty download, it is converted again and
+the output file is replaced. Such files are reported as "Updated".
