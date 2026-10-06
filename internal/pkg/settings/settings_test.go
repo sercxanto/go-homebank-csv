@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -347,6 +348,84 @@ batchconvert:
 	}
 	if s.BatchConvert.Sets[1].FileMaxAgeDays != 0 {
 		t.Errorf("Expected '0', got '%d' instead", s.BatchConvert.Sets[1].FileMaxAgeDays)
+	}
+}
+
+// TestSettingsLoadRejectsUnknownAndDuplicateKeys tests that misspelled or
+// repeated keys are reported instead of being silently ignored
+func TestSettingsLoadRejectsUnknownAndDuplicateKeys(t *testing.T) {
+	testCases := []struct {
+		name        string
+		text        string
+		expectedKey string // key the error has to name
+	}{
+		{
+			name: "misspelled top level key",
+			text: `
+batchConvert:
+  sets:
+  - name: name1
+    inputdir: /my/path11
+    outputdir: /my/path12`,
+			expectedKey: "batchConvert",
+		},
+		{
+			name: "misspelled key of batchconvert",
+			text: `
+batchconvert:
+  set:
+  - name: name1
+    inputdir: /my/path11
+    outputdir: /my/path12`,
+			expectedKey: "set",
+		},
+		{
+			name: "misspelled key of a set",
+			text: `
+batchconvert:
+  sets:
+  - name: name1
+    inputdir: /my/path11
+    outputdir: /my/path12
+    fileGlobPattern: "*.csv"`,
+			expectedKey: "fileGlobPattern",
+		},
+		{
+			name: "duplicate key of a set",
+			text: `
+batchconvert:
+  sets:
+  - name: name1
+    inputdir: /my/path11
+    inputdir: /my/path21
+    outputdir: /my/path12`,
+			expectedKey: "inputdir",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var s Settings
+			err := s.LoadFromString(tc.text)
+			if err == nil {
+				t.Fatal("Expected error")
+			}
+			if !strings.Contains(err.Error(), `"`+tc.expectedKey+`"`) {
+				t.Errorf("Expected the error to name '%s', got '%s'", tc.expectedKey, err)
+			}
+		})
+	}
+
+	var set BatchConvertSet
+	err := set.LoadFromString("name: name1\ninputdir: /my/path11\noutputDir: /my/path12")
+	if err == nil || !strings.Contains(err.Error(), `"outputDir"`) {
+		t.Errorf("Expected an error naming 'outputDir', got '%v'", err)
+	}
+
+	var s Settings
+	err = s.LoadFromFile(filepath.Join("testfiles", "unknown_key.yml"))
+	if err == nil || !strings.Contains(err.Error(), `"inputDir"`) {
+		t.Errorf("Expected an error naming 'inputDir', got '%v'", err)
 	}
 }
 

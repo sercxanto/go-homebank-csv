@@ -1,0 +1,5 @@
+batchconvert:
+  sets:
+  - name: name1
+    inputDir: /my/path11
+    outputdir: /my/path12

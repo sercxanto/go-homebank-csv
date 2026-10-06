@@ -116,6 +116,10 @@ The additional fields have the following meaning:
 * `format`: Specify the exact format to be expected. If not given an probably
    error-prone and time-consuming autodetection is done.
 
+All keys are lower case. Unknown keys, e.g. a misspelled `inputDir`, and keys
+given twice are rejected with an error naming the key and its line, instead of
+being ignored.
+
 ##### Portable paths
 
 Paths inside the config file can use a small set of shortcuts so that the same

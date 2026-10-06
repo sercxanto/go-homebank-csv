@@ -40,12 +40,21 @@ type Settings struct {
 	BatchConvert BatchConvertSettings `yaml:"batchconvert"`
 }
 
+// unmarshal parses the YAML in data into v.
+//
+// Unknown keys are rejected, so that a misspelled key, e.g. "inputDir"
+// instead of "inputdir", is reported instead of being silently ignored.
+// Duplicate keys are rejected by the yaml package by default.
+func unmarshal(data []byte, v any) error {
+	return yaml.UnmarshalWithOptions(data, v, yaml.Strict())
+}
+
 func (s *BatchConvertSet) LoadFromString(str string) error {
 	// Reset s to default values as yaml unmarshal does only write to
 	// fields present in yaml string
 	*s = BatchConvertSet{}
 
-	err := yaml.Unmarshal([]byte(str), s)
+	err := unmarshal([]byte(str), s)
 	if err != nil {
 		return err
 	}
@@ -56,7 +65,7 @@ func (s *Settings) LoadFromString(str string) error {
 	// Load settings from str
 	// Parse yaml contained in str into variable s
 	*s = Settings{}
-	err := yaml.Unmarshal([]byte(str), s)
+	err := unmarshal([]byte(str), s)
 	if err != nil {
 		return err
 	}
@@ -70,7 +79,7 @@ func (s *Settings) LoadFromFile(filePath string) error {
 	}
 
 	*s = Settings{}
-	err = yaml.Unmarshal(content, s)
+	err = unmarshal(content, s)
 	if err != nil {
 		return err
 	}
