@@ -1,3 +1,0 @@
-kind: Changed
-body: Reject unknown keys in the config file, e.g. a misspelled `inputDir` instead of `inputdir`, instead of silently ignoring them. Config files with such keys have to be corrected
-time: 2026-10-06T15:00:00.000000000Z

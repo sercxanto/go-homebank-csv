@@ -1,3 +1,0 @@
-kind: Fixed
-body: Do not fail to write an output file when a temporary file of an aborted earlier run is left next to it. The temporary file now gets a unique name, which also makes new output files accessible by the current user only
-time: 2026-10-06T13:00:00.000000000Z

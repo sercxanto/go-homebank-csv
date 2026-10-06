@@ -1,3 +1,0 @@
-kind: Security
-body: Reference the GitHub Actions of the CI and release workflows by commit SHA instead of by tag, so that a moved tag cannot run different code
-time: 2026-10-04T17:00:00.000000000Z
