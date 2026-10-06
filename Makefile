@@ -1,4 +1,4 @@
-.PHONY: all doc-start lint test dummy-build install-tools
+.PHONY: all doc-serve install-tools lint test build clean
 
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
