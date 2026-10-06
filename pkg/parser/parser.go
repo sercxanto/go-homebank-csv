@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -219,25 +220,30 @@ func sanitizeHomebankField(value string) string {
 	return value
 }
 
-// tempFileSuffix is appended to the output file name while it is written
-const tempFileSuffix = ".tmp"
+// tempFilePattern is the pattern for the name of the temporary file, which
+// is appended to the output file name while it is written. os.CreateTemp
+// replaces "*" with a random string.
+const tempFilePattern = ".*.tmp"
 
-// writeFileAtomically creates the file filepath with the content written by
+// writeFileAtomically creates the file outPath with the content written by
 // write.
 //
-// The content is written to a temporary file next to filepath, which is
-// renamed to filepath only after it has been written and closed successfully.
+// The content is written to a temporary file next to outPath, which is
+// renamed to outPath only after it has been written and closed successfully.
 // So a failure while writing, e.g. a full disk, never leaves an incomplete
 // file behind. batchconvert relies on this, as it skips input files whose
 // output file already exists.
-func writeFileAtomically(filepath string, write func(w io.Writer) error) error {
-	tempPath := filepath + tempFileSuffix
-	// O_EXCL does not overwrite an unrelated file which happens to have the
-	// name of the temporary file
-	tempFile, err := os.OpenFile(tempPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
+//
+// The temporary file gets a unique name. So it does not overwrite an
+// unrelated file, and a temporary file left behind by an aborted run, e.g.
+// after a power failure, does not block later runs. As it is created by
+// os.CreateTemp, the file is only accessible by the current user.
+func writeFileAtomically(outPath string, write func(w io.Writer) error) error {
+	tempFile, err := os.CreateTemp(filepath.Dir(outPath), filepath.Base(outPath)+tempFilePattern)
 	if err != nil {
 		return err
 	}
+	tempPath := tempFile.Name()
 
 	writer := bufio.NewWriter(tempFile)
 	err = write(writer)
@@ -250,7 +256,7 @@ func writeFileAtomically(filepath string, write func(w io.Writer) error) error {
 		err = closeErr
 	}
 	if err == nil {
-		err = os.Rename(tempPath, filepath)
+		err = os.Rename(tempPath, outPath)
 	}
 	if err != nil {
 		_ = os.Remove(tempPath)

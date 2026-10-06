@@ -26,6 +26,7 @@ func getTimeFromMaxAgeDays(fileMaxAgeDays uint, now time.Time) time.Time {
 
 // findFiles returns a list of files matching the given glob pattern and max age
 //
+// Directories are not part of the list, even if they match.
 // A file is considered matching if its modification time is younger than the given max age.
 // A minTime of zero time (January 1, year 1, 00:00:00 UTC.) is considered matching all files.
 // An empty fileGlobPattern is considered matching all files.
@@ -47,6 +48,11 @@ func findFiles(inputDir string, fileGlobPattern string, minTime time.Time) ([]st
 		fileInfo, err := os.Stat(files[i])
 		if err != nil {
 			return nil, err
+		}
+		// Only files are converted, the input directory is not searched
+		// recursively
+		if fileInfo.IsDir() {
+			continue
 		}
 		if minTime.IsZero() {
 			matchingFiles = append(matchingFiles, files[i])
