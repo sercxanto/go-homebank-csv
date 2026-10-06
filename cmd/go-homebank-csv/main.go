@@ -16,8 +16,8 @@ import (
 
 type ConvertCmd struct {
 	Format  *parser.SourceFormat `name:"format" help:"Format of input file, if not given it will be guessed. For a list of supported formats see the command 'list-formats'"`
-	Infile  string               `arg:"" name:"infile" type:"existingfile" help:"Input file" type:"path"`
-	Outfile string               `arg:"" name:"outfile" type:"path" help:"CSV file ready to import into homebank" type:"path"`
+	Infile  string               `arg:"" name:"infile" type:"existingfile" help:"Input file"`
+	Outfile string               `arg:"" name:"outfile" type:"path" help:"CSV file ready to import into homebank"`
 }
 
 type ListFormatsCmd struct {
