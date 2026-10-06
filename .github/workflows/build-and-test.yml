@@ -9,6 +9,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# A new push to a pull request cancels the checks of the previous one. Other
+# runs get a group of their own (run_id), so that every commit on main is
+# checked.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

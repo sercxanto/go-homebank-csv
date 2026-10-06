@@ -5,7 +5,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # One pull request for all actions instead of one per action
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
+    # The golang.org/x modules are usually released together
+    groups:
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
