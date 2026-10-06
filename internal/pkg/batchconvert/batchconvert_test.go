@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -736,6 +737,149 @@ func TestBatchConvertOutputOlder(t *testing.T) {
 				}
 				if string(content) != staleContent {
 					t.Errorf("Output file has been modified")
+				}
+			}
+		})
+	}
+}
+
+// TestBatchConvertOutputCollision tests that input files which would be
+// converted to the same output file are not converted, while the other files
+// are
+func TestBatchConvertOutputCollision(t *testing.T) {
+	testfilesBase, err := filepath.Abs("testfiles")
+	if err != nil {
+		t.Fatalf("Failed to get absolute path to 'testfiles': %s", err)
+	}
+	barclaycardFile := filepath.Join(testfilesBase, "input", "mixed", "Umsaetze.xlsx")
+	volksbankFile := filepath.Join(testfilesBase, "input", "volksbank", "Umsaetze_DE12345678901234567890_2023.10.04.csv")
+
+	type inputFile struct {
+		set    int    // index of the set
+		name   string // file name in the input directory of the set
+		source string // fixture to copy
+	}
+
+	testCases := []struct {
+		name             string
+		sharedOutputDir  bool        // all sets use the output directory of set 0
+		inputFiles       []inputFile // the last file never collides
+		collidingOutputs []string    // output file names of the colliding files
+	}{
+		{
+			name: "different extensions in one set",
+			inputFiles: []inputFile{
+				{0, "Umsaetze.csv", volksbankFile},
+				{0, "Umsaetze.xlsx", barclaycardFile},
+				{0, "Other.csv", volksbankFile},
+			},
+			collidingOutputs: []string{"Umsaetze.csv"},
+		},
+		{
+			name:            "same name in sets sharing the output directory",
+			sharedOutputDir: true,
+			inputFiles: []inputFile{
+				{0, "Umsaetze.csv", volksbankFile},
+				{1, "Umsaetze.xlsx", barclaycardFile},
+				{1, "Other.csv", volksbankFile},
+			},
+			collidingOutputs: []string{"Umsaetze.csv"},
+		},
+		{
+			// The input files are in different directories so that they
+			// can be created on a case-insensitive file system
+			name:            "names differing only in case",
+			sharedOutputDir: true,
+			inputFiles: []inputFile{
+				{0, "Umsaetze.csv", volksbankFile},
+				{1, "umsaetze.CSV", volksbankFile},
+				{1, "Other.csv", volksbankFile},
+			},
+			collidingOutputs: []string{"Umsaetze.csv", "umsaetze.csv"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			var sets []settings.BatchConvertSet
+			for setNr := range 2 {
+				inputDir := filepath.Join(tmpDir, fmt.Sprintf("input%d", setNr))
+				outputDir := filepath.Join(tmpDir, fmt.Sprintf("output%d", setNr))
+				if tc.sharedOutputDir {
+					outputDir = filepath.Join(tmpDir, "output0")
+				}
+				for _, dir := range []string{inputDir, outputDir} {
+					if err := os.MkdirAll(dir, 0o700); err != nil {
+						t.Fatalf("Failed to create directory '%s'", dir)
+					}
+				}
+				sets = append(sets, settings.BatchConvertSet{
+					Name:      fmt.Sprintf("set %d", setNr),
+					InputDir:  inputDir,
+					OutputDir: outputDir,
+				})
+			}
+
+			for _, f := range tc.inputFiles {
+				if err := copyFile(f.source, filepath.Join(sets[f.set].InputDir, f.name)); err != nil {
+					t.Fatalf("Failed to copy input file: %s", err)
+				}
+			}
+
+			var firstCbStatus BatchStatus
+			cb := func(s BatchStatus, _ interface{}) {
+				if firstCbStatus == nil {
+					firstCbStatus = make(BatchStatus, len(s))
+					for i := range s {
+						firstCbStatus[i] = BatchSetStatus{Name: s[i].Name, Files: slices.Clone(s[i].Files)}
+					}
+				}
+			}
+
+			status, err := BatchConvert(settings.BatchConvertSettings{Sets: sets}, time.Time{}, cb, nil)
+			if !errors.Is(err, ErrOutputCollision) {
+				t.Fatalf("Expected ErrOutputCollision, got '%v'", err)
+			}
+
+			collidingInputs := make([]string, 0, len(tc.inputFiles)-1)
+			for _, f := range tc.inputFiles[:len(tc.inputFiles)-1] {
+				collidingInputs = append(collidingInputs, filepath.Join(sets[f.set].InputDir, f.name))
+			}
+			for _, input := range collidingInputs {
+				if !strings.Contains(err.Error(), input) {
+					t.Errorf("Expected the error to name '%s', got '%s'", input, err)
+				}
+			}
+
+			// The collisions are reported before any file is converted
+			checkStatus := func(s BatchStatus, otherStatus ConversionStatus) {
+				t.Helper()
+				for _, set := range s {
+					for _, f := range set.Files {
+						if !slices.Contains(collidingInputs, f.InputFile) {
+							if f.Status != otherStatus {
+								t.Errorf("Expected status %d of '%s', got %d, error '%v'", otherStatus, f.InputFile, f.Status, f.Err)
+							}
+							continue
+						}
+						if f.Status != ConversionError || !errors.Is(f.Err, ErrOutputCollision) {
+							t.Errorf("Expected '%s' to fail with ErrOutputCollision, got status %d, error '%v'", f.InputFile, f.Status, f.Err)
+						}
+						if f.OutputFile == "" {
+							t.Errorf("Expected the output file of '%s' to be set", f.InputFile)
+						}
+					}
+				}
+			}
+			checkStatus(firstCbStatus, NotStartedYet)
+			checkStatus(status, ConversionSuccess)
+
+			for _, set := range sets {
+				for _, name := range tc.collidingOutputs {
+					if _, err := os.Stat(filepath.Join(set.OutputDir, name)); err == nil {
+						t.Errorf("Expected no output file '%s' in '%s'", name, set.OutputDir)
+					}
 				}
 			}
 		})

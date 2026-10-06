@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -114,6 +115,67 @@ type BatchStatus []BatchSetStatus
 //   - userData: any user data that was passed to the BatchConvert function.
 type StatusCallback func(s BatchStatus, userData interface{})
 
+// ErrOutputCollision is the error of input files which would be converted to
+// the same output file as other input files. It is wrapped together with the
+// names of the other input files.
+var ErrOutputCollision = errors.New("output file name collides with other input files")
+
+// outputFileName returns the path of the output file for the given input file
+func outputFileName(infile string, outputDir string) string {
+	outfileBasename := strings.TrimSuffix(filepath.Base(infile), filepath.Ext(infile)) + ".csv"
+	return filepath.Join(outputDir, outfileBasename)
+}
+
+// outputFileKey returns the key to compare output file paths with.
+//
+// Case is ignored as the output directory may be on a case-insensitive file
+// system, e.g. on Windows, macOS or a synchronized drive. There two input
+// files which differ only in case would be converted to the same output file.
+func outputFileKey(path string) string {
+	if absPath, err := filepath.Abs(path); err == nil {
+		path = absPath
+	}
+	return strings.ToLower(path)
+}
+
+// markOutputCollisions sets the status of all files which share an output
+// file with other files to ConversionError.
+//
+// Which of these files would end up in the output file depends on the order
+// of the conversion and the modification times, the others would be skipped
+// or overwritten without notice. So none of them is converted.
+//
+// outfiles holds the output file of each file in status. The returned errors
+// are in the order of status.
+func markOutputCollisions(status BatchStatus, outfiles [][]string) []error {
+	inputFilesByKey := make(map[string][]string)
+	for setNr := range status {
+		for fileNr, fileStatus := range status[setNr].Files {
+			key := outputFileKey(outfiles[setNr][fileNr])
+			inputFilesByKey[key] = append(inputFilesByKey[key], fileStatus.InputFile)
+		}
+	}
+
+	var fileErrors []error
+	for setNr := range status {
+		for fileNr := range status[setNr].Files {
+			fileStatus := &status[setNr].Files[fileNr]
+			inputFiles := inputFilesByKey[outputFileKey(outfiles[setNr][fileNr])]
+			if len(inputFiles) < 2 {
+				continue
+			}
+			otherInputFiles := slices.DeleteFunc(slices.Clone(inputFiles), func(f string) bool {
+				return f == fileStatus.InputFile
+			})
+			fileStatus.OutputFile = outfiles[setNr][fileNr]
+			fileStatus.Status = ConversionError
+			fileStatus.Err = fmt.Errorf("%w: %s", ErrOutputCollision, strings.Join(otherInputFiles, ", "))
+			fileErrors = append(fileErrors, fmt.Errorf("%s: %w", fileStatus.InputFile, fileStatus.Err))
+		}
+	}
+	return fileErrors
+}
+
 // BatchConvert is a function that performs batch conversion of files.
 //
 // It takes the following parameters:
@@ -127,6 +189,11 @@ type StatusCallback func(s BatchStatus, userData interface{})
 // if the file with the same name does not exist yet in the output directory or if
 // it is older than the input file, e.g. because the input file has been
 // downloaded again. In the latter case the output file is replaced.
+//
+// The input files of all sets are searched before any file is converted.
+// Input files which would be converted to the same output file, e.g.
+// "Umsaetze.csv" and "Umsaetze.xlsx" or files of different sets sharing an
+// output directory, are not converted. Their cause is ErrOutputCollision.
 //
 // A file which fails to convert does not stop the conversion of the remaining
 // files. Its cause is reported in FileStatus.Err and, together with the causes
@@ -145,43 +212,53 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		return nil, err
 	}
 
-	// Causes of the failed files, prefixed with the file name
-	var fileErrors []error
+	// Output file of each found input file, indexed like status
+	outfiles := make([][]string, 0, len(s.Sets))
 
-	for setNr, set := range s.Sets {
+	for _, set := range s.Sets {
 		var fileInfo os.FileInfo
 		fileInfo, err = os.Stat(set.OutputDir)
 		if err != nil {
-			return status, errors.Join(append(fileErrors, err)...)
+			return status, err
 		}
 		if !fileInfo.IsDir() {
-			return status, errors.Join(append(fileErrors, errors.New("outputDir is not a directory"))...)
+			return status, errors.New("outputDir is not a directory")
 		}
-
-		status = append(status, BatchSetStatus{
-			Files: []FileStatus{},
-			Name:  set.Name,
-		})
 
 		var fileList []string
 		fileList, err = findFiles(set.InputDir, set.FileGlobPattern, getTimeFromMaxAgeDays(uint(set.FileMaxAgeDays), now))
 		if err != nil {
-			return status, errors.Join(append(fileErrors, err)...)
+			return status, err
 		}
 
+		setStatus := BatchSetStatus{
+			Files: []FileStatus{},
+			Name:  set.Name,
+		}
+		setOutfiles := make([]string, 0, len(fileList))
 		for _, infile := range fileList {
-			status[setNr].Files = append(status[setNr].Files, FileStatus{
+			setStatus.Files = append(setStatus.Files, FileStatus{
 				InputFile: infile,
 				Status:    NotStartedYet})
+			setOutfiles = append(setOutfiles, outputFileName(infile, set.OutputDir))
 		}
-		if c != nil {
-			c(status, userData)
-		}
+		status = append(status, setStatus)
+		outfiles = append(outfiles, setOutfiles)
+	}
 
-		for fileNr, infile := range fileList {
-			// get infile without extension
-			outfileBasename := strings.TrimSuffix(infile, filepath.Ext(infile)) + ".csv"
-			outfile := filepath.Join(set.OutputDir, filepath.Base(outfileBasename))
+	// Causes of the failed files, prefixed with the file name
+	fileErrors := markOutputCollisions(status, outfiles)
+	if c != nil {
+		c(status, userData)
+	}
+
+	for setNr, set := range s.Sets {
+		for fileNr, fileStatus := range status[setNr].Files {
+			if fileStatus.Status != NotStartedYet {
+				continue
+			}
+			infile := fileStatus.InputFile
+			outfile := outfiles[setNr][fileNr]
 			status[setNr].Files[fileNr].OutputFile = outfile
 
 			// Skip if output file already exists and is up to date
