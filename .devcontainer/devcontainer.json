@@ -13,7 +13,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "go install github.com/miniscruff/changie@latest && go install golang.org/x/pkgsite/cmd/pkgsite@latest",
+	"postCreateCommand": "make install-tools",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
