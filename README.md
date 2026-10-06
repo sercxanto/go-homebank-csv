@@ -150,10 +150,10 @@ batchconvert:
     format: Volksbank
 ```
 
-Call the sub-command `batchconvert` like this:
+Call the sub-command `batch-convert` like this:
 
 ```shell
-go-homebank-csv batchconvert
+go-homebank-csv batch-convert
 ```
 
 `go-homebank-csv` will do the following:
