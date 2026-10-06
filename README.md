@@ -174,3 +174,11 @@ go-homebank-csv batchconvert
 If an input file is newer than the already existing output file, e.g. because
 it has been downloaded again after a faulty download, it is converted again and
 the output file is replaced. Such files are reported as "Updated".
+
+Input files which would be converted to the same output file are not converted
+and reported as "Failed". This happens for files with the same base name, e.g.
+"Umsaetze.csv" and "Umsaetze.xlsx", in one input directory or in sets which share
+an output directory. Names differing only in case count as the same name, as the
+output directory may be on a case-insensitive file system. Rename one of the
+files, narrow down `fileglobpattern` or use separate output directories to
+resolve this.
