@@ -182,6 +182,12 @@ func TestFindFiles(t *testing.T) {
 	if err := testFiles.createFiles(tmpDir); err != nil {
 		t.Fatalf("Failed to create files in '%s'", tmpDir)
 	}
+	// Directories matching the patterns are not part of the result
+	for _, dir := range []string{"subdir", "subdir.csv"} {
+		if err := os.Mkdir(filepath.Join(tmpDir, dir), 0o700); err != nil {
+			t.Fatalf("Failed to create directory '%s'", dir)
+		}
+	}
 
 	input := &findFilesInputDataList{
 		{"", getTimeFromMaxAgeDays(0, now), []string{
