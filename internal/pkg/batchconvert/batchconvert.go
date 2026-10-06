@@ -68,7 +68,7 @@ type ConversionStatus int
 
 const (
 	NotStartedYet        ConversionStatus = iota // Conversion has not started yet
-	Skipped                                      // File is skipped because it already exists in the output directory
+	Skipped                                      // File is skipped because its output file exists and is not older than the input file
 	ConversionInProgress                         // Conversion is in progress
 	ConversionError                              // Conversion failed
 	ConversionSuccess                            // Conversion was successful
@@ -79,6 +79,7 @@ type FileStatus struct {
 	InputFile  string               // Absolute path of the input file
 	OutputFile string               // Absolute path of the output file. Only set after conversion started.
 	Status     ConversionStatus     // Status of the conversion
+	Overwrite  bool                 // An older output file exists and is replaced by the conversion
 	Format     *parser.SourceFormat // Detected source format
 	Err        error                // Cause of the failure if Status is ConversionError
 }
@@ -123,7 +124,9 @@ type StatusCallback func(s BatchStatus, userData interface{})
 //   - userData: any user data that was passed to the BatchConvert function.
 //
 // The converted files are placed in the output directory. The conversion happens only
-// if the file with the same name does not exist yet in the output directory.
+// if the file with the same name does not exist yet in the output directory or if
+// it is older than the input file, e.g. because the input file has been
+// downloaded again. In the latter case the output file is replaced.
 //
 // A file which fails to convert does not stop the conversion of the remaining
 // files. Its cause is reported in FileStatus.Err and, together with the causes
@@ -181,13 +184,26 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 			outfile := filepath.Join(set.OutputDir, filepath.Base(outfileBasename))
 			status[setNr].Files[fileNr].OutputFile = outfile
 
-			// Skip if output file already exists
-			if _, err := os.Stat(outfile); err == nil {
-				status[setNr].Files[fileNr].Status = Skipped
-				if c != nil {
-					c(status, userData)
+			// Skip if output file already exists and is up to date
+			if outInfo, err := os.Stat(outfile); err == nil {
+				inInfo, err := os.Stat(infile)
+				if err != nil {
+					status[setNr].Files[fileNr].Status = ConversionError
+					status[setNr].Files[fileNr].Err = err
+					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
+					if c != nil {
+						c(status, userData)
+					}
+					continue
 				}
-				continue
+				if !inInfo.ModTime().After(outInfo.ModTime()) {
+					status[setNr].Files[fileNr].Status = Skipped
+					if c != nil {
+						c(status, userData)
+					}
+					continue
+				}
+				status[setNr].Files[fileNr].Overwrite = true
 			}
 
 			var fileParser parser.Parser
