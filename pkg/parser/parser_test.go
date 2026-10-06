@@ -338,6 +338,24 @@ func TestWriteHomeBankRecordsKeepsExistingTempFiles(t *testing.T) {
 	}
 }
 
+// If the temporary file cannot be created, here because the output
+// directory does not exist, the error is passed on
+func TestWriteHomeBankRecordsMissingDirectory(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "missing", "output.csv")
+
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected fs.ErrNotExist, got %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Expected an empty directory, got %v", entries)
+	}
+}
+
 // failingWriter fails all writes after the first okWrites ones
 type failingWriter struct {
 	okWrites int
