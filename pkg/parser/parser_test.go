@@ -292,29 +292,49 @@ func TestWriteHomeBankRecordsRemovesTempFileOnError(t *testing.T) {
 	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err == nil {
 		t.Error("Expected an error when the output path is a directory")
 	}
-	if _, err := os.Stat(fpath + tempFileSuffix); !errors.Is(err, fs.ErrNotExist) {
-		t.Errorf("Expected the temporary file to be removed, got %v", err)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "output.csv" {
+		t.Errorf("Expected the temporary file to be removed, got %v", entries)
 	}
 }
 
-// A file which happens to have the name of the temporary file is neither
-// overwritten nor removed
-func TestWriteHomeBankRecordsKeepsExistingTempFile(t *testing.T) {
-	fpath := filepath.Join(t.TempDir(), "output.csv")
-	tempPath := fpath + tempFileSuffix
-	if err := os.WriteFile(tempPath, []byte("unrelated\n"), 0o600); err != nil {
-		t.Fatal(err)
+// Files which have the name of a temporary file, e.g. left behind by an
+// aborted run, neither block writing the output file nor are they changed
+func TestWriteHomeBankRecordsKeepsExistingTempFiles(t *testing.T) {
+	dir := t.TempDir()
+	fpath := filepath.Join(dir, "output.csv")
+	tempPaths := []string{
+		fpath + ".tmp", // name used by earlier versions
+		fpath + ".123456.tmp",
+	}
+	for _, tempPath := range tempPaths {
+		if err := os.WriteFile(tempPath, []byte("unrelated\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	if err := writeHomeBankRecords(testHomebankRecords(), fpath); !errors.Is(err, fs.ErrExist) {
-		t.Errorf("Expected fs.ErrExist, got %v", err)
+	if err := writeHomeBankRecords(testHomebankRecords(), fpath); err != nil {
+		t.Fatalf("Expected no error, got %v", err)
 	}
-	content, err := os.ReadFile(tempPath)
-	if err != nil || string(content) != "unrelated\n" {
-		t.Errorf("Expected the existing file to be kept, got %q, %v", content, err)
+	content, err := os.ReadFile(fpath)
+	if err != nil || !strings.HasPrefix(string(content), "date;payment;") {
+		t.Errorf("Expected the output file to be written, got %q, %v", content, err)
 	}
-	if _, err := os.Stat(fpath); !errors.Is(err, fs.ErrNotExist) {
-		t.Errorf("Expected no output file, got %v", err)
+	for _, tempPath := range tempPaths {
+		content, err := os.ReadFile(tempPath)
+		if err != nil || string(content) != "unrelated\n" {
+			t.Errorf("Expected '%s' to be kept, got %q, %v", tempPath, content, err)
+		}
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != len(tempPaths)+1 {
+		t.Errorf("Expected no further temporary file, got %v", entries)
 	}
 }
 
