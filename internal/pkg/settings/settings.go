@@ -81,7 +81,8 @@ func (s *Settings) LoadFromFile(filePath string) error {
 	*s = Settings{}
 	err = unmarshal(content, s)
 	if err != nil {
-		return err
+		// The error names line and column only, so add the file
+		return fmt.Errorf("config file '%s': %w", filePath, err)
 	}
 	return s.NormalizePaths()
 }

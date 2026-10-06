@@ -423,9 +423,13 @@ batchconvert:
 	}
 
 	var s Settings
-	err = s.LoadFromFile(filepath.Join("testfiles", "unknown_key.yml"))
+	fpath := filepath.Join("testfiles", "unknown_key.yml")
+	err = s.LoadFromFile(fpath)
 	if err == nil || !strings.Contains(err.Error(), `"inputDir"`) {
 		t.Errorf("Expected an error naming 'inputDir', got '%v'", err)
+	}
+	if err == nil || !strings.Contains(err.Error(), fpath) {
+		t.Errorf("Expected the error to name the file '%s', got '%v'", fpath, err)
 	}
 }
 
