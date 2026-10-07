@@ -61,8 +61,8 @@ func TestWriteHomeBankRecordsSanitizesFields(t *testing.T) {
 	}
 
 	lines := strings.Split(strings.TrimRight(string(content), "\n"), "\n")
-	if len(lines) != 2 {
-		t.Fatalf("Expected a header and one record, got %d lines: %q", len(lines), lines)
+	if len(lines) != 1 {
+		t.Fatalf("Expected one record, got %d lines: %q", len(lines), lines)
 	}
 	for i, line := range lines {
 		if fields := strings.Count(line, homebankFieldSeparator) + 1; fields != 8 {
@@ -71,8 +71,8 @@ func TestWriteHomeBankRecordsSanitizesFields(t *testing.T) {
 	}
 
 	expected := "2024-01-01;0;info,with,separator;Payee, Name;memo,with line break;-1.500000;cat,egory;tag,one"
-	if lines[1] != expected {
-		t.Errorf("Expected:\n%s\ngot:\n%s", expected, lines[1])
+	if lines[0] != expected {
+		t.Errorf("Expected:\n%s\ngot:\n%s", expected, lines[0])
 	}
 }
 
@@ -244,6 +244,19 @@ func testHomebankRecords() []homebankRecord {
 	return []homebankRecord{{date: "2024-01-01", memo: "memo", amount: -1.5}}
 }
 
+// HomeBank warns about a header line on import, so only the data lines are
+// written
+func TestWriteHomeBankCSVNoHeader(t *testing.T) {
+	var b strings.Builder
+	if err := writeHomeBankCSV(&b, testHomebankRecords()); err != nil {
+		t.Fatal(err)
+	}
+	expected := "2024-01-01;0;;;memo;-1.500000;;\n"
+	if b.String() != expected {
+		t.Errorf("Expected %q, got %q", expected, b.String())
+	}
+}
+
 // A successful write leaves only the output file, no temporary file
 func TestWriteHomeBankRecordsNoTempFileLeft(t *testing.T) {
 	dir := t.TempDir()
@@ -275,7 +288,7 @@ func TestWriteHomeBankRecordsReplacesExistingFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(content), "date;payment;") {
+	if !strings.HasPrefix(string(content), "2024-01-01;0;") {
 		t.Errorf("Expected the existing file to be replaced, got %q", content)
 	}
 }
@@ -320,7 +333,7 @@ func TestWriteHomeBankRecordsKeepsExistingTempFiles(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 	content, err := os.ReadFile(fpath)
-	if err != nil || !strings.HasPrefix(string(content), "date;payment;") {
+	if err != nil || !strings.HasPrefix(string(content), "2024-01-01;0;") {
 		t.Errorf("Expected the output file to be written, got %q, %v", content, err)
 	}
 	for _, tempPath := range tempPaths {
@@ -369,10 +382,9 @@ func (w *failingWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// An error while writing the header or a record is passed on instead of
-// being ignored
+// An error while writing a record is passed on instead of being ignored
 func TestWriteHomeBankCSVWriteError(t *testing.T) {
-	for okWrites := range 2 {
+	for okWrites := range 1 {
 		err := writeHomeBankCSV(&failingWriter{okWrites: okWrites}, testHomebankRecords())
 		if err == nil {
 			t.Errorf("Expected the write error to be returned after %d successful writes", okWrites)
