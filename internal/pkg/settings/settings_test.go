@@ -175,6 +175,27 @@ func TestBatchConvertSetsCheckValidity(t *testing.T) {
 		t.Error("Expected duplicate InputDir/FileGlobPattern error")
 	}
 
+	// The input directory and the glob pattern are compared separately, not
+	// as concatenated string, which made these two sets duplicates
+	s = BatchConvertSets{
+		BatchConvertSet{
+			Name:            "name1",
+			InputDir:        "/my/path1",
+			OutputDir:       "/my/path2",
+			FileGlobPattern: "a*",
+		},
+		BatchConvertSet{
+			Name:            "name2",
+			InputDir:        "/my/path1a",
+			OutputDir:       "/my/path4",
+			FileGlobPattern: "*",
+		},
+	}
+
+	if err := s.CheckValidity(); err != nil {
+		t.Errorf("Expected nil error, got '%s'", err)
+	}
+
 	s = BatchConvertSets{
 		BatchConvertSet{
 			Name:      "name1",
