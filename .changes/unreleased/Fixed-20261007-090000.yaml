@@ -1,3 +1,6 @@
 kind: Fixed
-body: Do not reject sets in the config file as duplicates whose input directory and glob pattern only result in the same text when put together, e.g. `/finance` with `a*` and `/financea` with `*`
+body: |-
+  Do not reject sets in the config file as duplicates whose input directory and
+  glob pattern only result in the same text when put together, e.g. `/finance`
+  with `a*` and `/financea` with `*`
 time: 2026-10-07T09:00:00.000000000Z
