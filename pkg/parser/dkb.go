@@ -14,7 +14,7 @@ Parsing rules:
 import (
 	"encoding/csv"
 	"os"
-	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -180,5 +180,5 @@ func isValidDkbHeader(record []string) bool {
 		"Mandatsreferenz",
 		"Kundenreferenz",
 	}
-	return reflect.DeepEqual(record, expected)
+	return slices.Equal(record, expected)
 }

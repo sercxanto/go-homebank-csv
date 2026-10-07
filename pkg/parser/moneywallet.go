@@ -3,7 +3,7 @@ package parser
 import (
 	"encoding/csv"
 	"os"
-	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -118,7 +118,7 @@ func isValidMoneyWalletHeader(record []string) bool {
 		"money",
 		"description",
 	}
-	return reflect.DeepEqual(record, expected)
+	return slices.Equal(record, expected)
 }
 
 // convertRecord converts a single record from barclaycard to homebank format
