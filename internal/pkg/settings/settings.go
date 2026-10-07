@@ -177,7 +177,12 @@ func (s BatchConvertSets) CheckValidity() error {
 		}
 		names[entry.Name] = true
 
-		input := inputFiles{entry.InputDir, entry.FileGlobPattern}
+		// An empty pattern matches all files, like "*"
+		pattern := entry.FileGlobPattern
+		if pattern == "" {
+			pattern = "*"
+		}
+		input := inputFiles{entry.InputDir, pattern}
 		if inputs[input] {
 			return fmt.Errorf("duplicate InputDir / FileGlobPattern combination detected ('%s', '%s')",
 				entry.InputDir, entry.FileGlobPattern)
