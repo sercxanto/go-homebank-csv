@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -65,7 +64,7 @@ func findFiles(inputDir string, fileGlobPattern string, minTime time.Time) ([]st
 	}
 
 	// sort matchingFiles alphabetically to keep the order consistent
-	sort.Strings(matchingFiles)
+	slices.Sort(matchingFiles)
 
 	return matchingFiles, nil
 }
@@ -119,7 +118,7 @@ type BatchStatus []BatchSetStatus
 //
 //   - s: a BatchStatus struct containing the status of the conversion.
 //   - userData: any user data that was passed to the BatchConvert function.
-type StatusCallback func(s BatchStatus, userData interface{})
+type StatusCallback func(s BatchStatus, userData any)
 
 // ErrOutputCollision is the error of input files which would be converted to
 // the same output file as other input files. It is wrapped together with the
@@ -204,7 +203,7 @@ func markOutputCollisions(status BatchStatus, outfiles [][]string) []error {
 // A file which fails to convert does not stop the conversion of the remaining
 // files. Its cause is reported in FileStatus.Err and, together with the causes
 // of all other failed files, in the returned error.
-func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallback, userData interface{}) (status BatchStatus, err error) {
+func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallback, userData any) (status BatchStatus, err error) {
 
 	if len(s.Sets) == 0 {
 		return nil, nil

@@ -83,7 +83,7 @@ func (c *BatchConvertCmd) Run() error {
 	// Remember last conversion state for each file to not show duplicate output
 	fileStatus := make(map[string]batchconvert.ConversionStatus, 20)
 
-	cb := func(status batchconvert.BatchStatus, _ interface{}) {
+	cb := func(status batchconvert.BatchStatus, _ any) {
 		for _, b := range status {
 			for _, f := range b.Files {
 				changed := false

@@ -159,28 +159,30 @@ func (s BatchConvertSet) CheckValidity() error {
 //   - duplicate InputDir / FileGlobPattern combination
 func (s BatchConvertSets) CheckValidity() error {
 
-	names := make([]string, 0, len(s))
-	inputDirAndGlobPattern := make([]string, 0, len(s))
+	// inputFiles identifies the input files of a set
+	type inputFiles struct {
+		inputDir        string
+		fileGlobPattern string
+	}
+
+	names := make(map[string]bool, len(s))
+	inputs := make(map[inputFiles]bool, len(s))
 
 	for _, entry := range s {
 		if err := entry.CheckValidity(); err != nil {
 			return err
 		}
-		for i := range names {
-			if names[i] == entry.Name {
-				return fmt.Errorf("duplicate Name '%s' detected", entry.Name)
-			}
+		if names[entry.Name] {
+			return fmt.Errorf("duplicate Name '%s' detected", entry.Name)
 		}
-		names = append(names, entry.Name)
+		names[entry.Name] = true
 
-		value := entry.InputDir + entry.FileGlobPattern
-		for i := range inputDirAndGlobPattern {
-			if inputDirAndGlobPattern[i] == value {
-				return fmt.Errorf("duplicate InputDir / FileGlobPattern combination detected ('%s', '%s')",
-					entry.InputDir, entry.FileGlobPattern)
-			}
+		input := inputFiles{entry.InputDir, entry.FileGlobPattern}
+		if inputs[input] {
+			return fmt.Errorf("duplicate InputDir / FileGlobPattern combination detected ('%s', '%s')",
+				entry.InputDir, entry.FileGlobPattern)
 		}
-		inputDirAndGlobPattern = append(inputDirAndGlobPattern, value)
+		inputs[input] = true
 	}
 
 	return nil

@@ -3,7 +3,7 @@ package parser
 import (
 	"encoding/csv"
 	"os"
-	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -131,7 +131,7 @@ func isValidVolksbankHeader(record []string) bool {
 		"Glaeubiger ID",
 		"Mandatsreferenz",
 	}
-	return reflect.DeepEqual(record, expected)
+	return slices.Equal(record, expected)
 }
 
 // convertRecord converts a single record from volksbank to homebank format

@@ -2,9 +2,9 @@ package parser
 
 import (
 	"encoding/csv"
+	"maps"
 	"os"
-	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -191,11 +191,7 @@ func splitComdirectBuchungstext(fields []string, buchungstext string) map[string
 	/* Get a sorted list of startPosition sortedStartPositions,
 	   e.g. [0,14,31]
 	*/
-	sortedStartPositions := make([]int, 0, len(startPositions))
-	for k := range startPositions {
-		sortedStartPositions = append(sortedStartPositions, k)
-	}
-	sort.Ints(sortedStartPositions)
+	sortedStartPositions := slices.Sorted(maps.Keys(startPositions))
 
 	/*
 	   Iterate over the sorted positions and extract the fieldname and value
@@ -225,7 +221,7 @@ func isValidComdirectHeader(record []string) bool {
 		"Umsatz in EUR",
 		"", // yes, there is an empty field
 	}
-	return reflect.DeepEqual(record, expected)
+	return slices.Equal(record, expected)
 }
 
 /*

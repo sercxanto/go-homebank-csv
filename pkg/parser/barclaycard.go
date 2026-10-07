@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -48,7 +48,7 @@ func isValidBarclaycardHeader(record []string) bool {
 		"Kontaktlose Bezahlung",
 		"Details",
 	}
-	return reflect.DeepEqual(record, expected)
+	return slices.Equal(record, expected)
 }
 
 // barclaycardCell returns the value of the given column of a row.
