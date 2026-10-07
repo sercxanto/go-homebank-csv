@@ -140,22 +140,11 @@ func (p *dkbParser) GetNumberOfEntries() int {
 }
 
 func (p *dkbParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(p.entries))
-	for _, mRecord := range p.entries {
-		hRecord := mRecord.convertRecord()
-		hRecords = append(hRecords, hRecord)
-	}
-
-	err := writeHomeBankRecords(hRecords, filepath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writeConvertedRecords(p.entries, (*dkbRecord).convertRecord, filepath)
 }
 
 func (d *dkbRecord) convertRecord() (h homebankRecord) {
-	h.payment = 0
+	h.payment = paymentNone
 	h.date = d.buchungsdatum.Format("2006-01-02")
 	if d.betragEUR < 0 {
 		h.payee = d.zahlungsempfaenger

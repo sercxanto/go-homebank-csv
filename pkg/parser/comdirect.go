@@ -129,18 +129,7 @@ func (m *comdirectParser) GetNumberOfEntries() int {
 }
 
 func (m *comdirectParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(m.entries))
-	for _, mRecord := range m.entries {
-		hRecord := mRecord.convertRecord()
-		hRecords = append(hRecords, hRecord)
-	}
-
-	err := writeHomeBankRecords(hRecords, filepath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writeConvertedRecords(m.entries, (*comdirectRecord).convertRecord, filepath)
 }
 
 /*
@@ -248,7 +237,7 @@ Example:
 	}
 */
 func (c *comdirectRecord) convertRecord() (h homebankRecord) {
-	h.payment = 0
+	h.payment = paymentNone
 	h.date = c.buchungstag.Format("2006-01-02")
 	h.amount = c.umsatzEUR
 	h.memo = c.fullBuchungstext
