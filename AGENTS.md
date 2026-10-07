@@ -64,3 +64,7 @@ This file contains repository-specific instructions for AI coding agents.
   `Bump <dependency> from <old version> to <new version>`.
 - Do not assume Dependabot creates the changelog entry; the human or agent
   applying the update is responsible for it.
+- Wrap the `body` of a Changie entry at 80 characters, written as a YAML block
+  scalar (`body: |-`). The `changeFormat` in `.changie.yaml` indents the
+  continuation lines, so the list items in `CHANGELOG.md` stay within the line
+  length enforced by `.markdownlint.json`.

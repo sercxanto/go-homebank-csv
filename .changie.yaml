@@ -5,7 +5,7 @@ changelogPath: CHANGELOG.md
 versionExt: md
 versionFormat: '## {{.VersionNoPrefix}} - {{.Time.Format "2006-01-02"}}'
 kindFormat: '### {{.Kind}}'
-changeFormat: '* {{.Body}}'
+changeFormat: '* {{ replace "\n" "\n  " .Body }}'
 kinds:
 - label: Added
   auto: minor
