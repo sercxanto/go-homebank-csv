@@ -244,7 +244,8 @@ func testHomebankRecords() []homebankRecord {
 	return []homebankRecord{{date: "2024-01-01", memo: "memo", amount: -1.5}}
 }
 
-// HomeBank rejects a header line, so only the data lines are written
+// HomeBank warns about a header line on import, so only the data lines are
+// written
 func TestWriteHomeBankCSVNoHeader(t *testing.T) {
 	var b strings.Builder
 	if err := writeHomeBankCSV(&b, testHomebankRecords()); err != nil {

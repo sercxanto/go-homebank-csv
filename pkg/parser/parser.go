@@ -272,8 +272,8 @@ func writeHomeBankRecords(records []homebankRecord, filepath string) error {
 	})
 }
 
-// writeHomeBankCSV writes the records in the homebank CSV format. HomeBank
-// expects data lines only, so no header line is written.
+// writeHomeBankCSV writes the records in the homebank CSV format. No header
+// line is written, as HomeBank skips it on import, but warns about it.
 func writeHomeBankCSV(w io.Writer, records []homebankRecord) error {
 	for _, rec := range records {
 		// date is a formatted timestamp, payment and amount are numbers, so

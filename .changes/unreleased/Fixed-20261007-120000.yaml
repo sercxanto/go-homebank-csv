@@ -1,3 +1,3 @@
 kind: Fixed
-body: Do not write a header line to the HomeBank CSV output files, as HomeBank rejects files whose first line is a header. The output files now contain data lines only
+body: Do not write a header line to the HomeBank CSV output files. HomeBank skips a header line on import, but shows a warning about it. The output files now contain data lines only
 time: 2026-10-07T12:00:00.000000000Z
