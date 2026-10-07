@@ -186,6 +186,13 @@ func GetGuessedParser(filepath string) Parser {
 	return nil
 }
 
+// Payment types of a homebankRecord, as defined by the HomeBank CSV format.
+// Only the types used by the parsers are listed.
+const (
+	paymentNone       int8 = 0
+	paymentCreditCard int8 = 1
+)
+
 // homebankRecord reflects the data in the CSV file,
 // see http://homebank.free.fr/help/misc-csvformat.html
 type homebankRecord struct {
@@ -262,6 +269,16 @@ func writeFileAtomically(outPath string, write func(w io.Writer) error) error {
 		_ = os.Remove(tempPath)
 	}
 	return err
+}
+
+// writeConvertedRecords converts the records of a parser with convert and
+// writes them as homebank CSV file
+func writeConvertedRecords[T any](entries []T, convert func(*T) homebankRecord, filepath string) error {
+	records := make([]homebankRecord, 0, len(entries))
+	for i := range entries {
+		records = append(records, convert(&entries[i]))
+	}
+	return writeHomeBankRecords(records, filepath)
 }
 
 // writeHomeBankRecords writes a slice of HomebankRecord to a CSV file

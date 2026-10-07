@@ -95,18 +95,7 @@ func (m *moneywalletParser) GetNumberOfEntries() int {
 }
 
 func (m *moneywalletParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(m.entries))
-	for _, mRecord := range m.entries {
-		hRecord := mRecord.convertRecord()
-		hRecords = append(hRecords, hRecord)
-	}
-
-	err := writeHomeBankRecords(hRecords, filepath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writeConvertedRecords(m.entries, (*moneywalletRecord).convertRecord, filepath)
 }
 
 func isValidMoneyWalletHeader(record []string) bool {
@@ -121,12 +110,12 @@ func isValidMoneyWalletHeader(record []string) bool {
 	return slices.Equal(record, expected)
 }
 
-// convertRecord converts a single record from barclaycard to homebank format
+// convertRecord converts a single record from moneywallet to homebank format
 func (m *moneywalletRecord) convertRecord() (record homebankRecord) {
 	var result homebankRecord
 
 	result.category = m.category
-	result.payment = 0
+	result.payment = paymentNone
 	result.info = m.description
 	result.date = m.datetime.Format("2006-01-02")
 	result.amount = m.money

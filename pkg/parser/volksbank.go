@@ -96,18 +96,7 @@ func (m *volksbankParser) GetNumberOfEntries() int {
 }
 
 func (m *volksbankParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(m.entries))
-	for _, mRecord := range m.entries {
-		hRecord := mRecord.convertRecord()
-		hRecords = append(hRecords, hRecord)
-	}
-
-	err := writeHomeBankRecords(hRecords, filepath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writeConvertedRecords(m.entries, (*volksbankRecord).convertRecord, filepath)
 }
 
 func isValidVolksbankHeader(record []string) bool {
@@ -137,7 +126,7 @@ func isValidVolksbankHeader(record []string) bool {
 // convertRecord converts a single record from volksbank to homebank format
 func (v *volksbankRecord) convertRecord() (record homebankRecord) {
 	var result homebankRecord
-	result.payment = 0
+	result.payment = paymentNone
 	result.memo = v.verwendungszweck
 	result.date = v.buchungstag.Format("2006-01-02")
 	result.amount = v.betrag

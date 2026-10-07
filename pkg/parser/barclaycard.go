@@ -169,7 +169,7 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 func (b *barclaycardRecord) convertRecord() homebankRecord {
 	return homebankRecord{
 		date:     b.transactionDate.Format("2006-01-02"),
-		payment:  1, // Credit card
+		payment:  paymentCreditCard,
 		info:     b.description,
 		payee:    b.payee,
 		memo:     "",
@@ -180,14 +180,5 @@ func (b *barclaycardRecord) convertRecord() homebankRecord {
 }
 
 func (b *barclaycardParser) ConvertToHomebank(filepath string) error {
-	hRecords := make([]homebankRecord, 0, len(b.entries))
-	for _, bRecord := range b.entries {
-		hRecord := bRecord.convertRecord()
-		hRecords = append(hRecords, hRecord)
-	}
-	err := writeHomeBankRecords(hRecords, filepath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return writeConvertedRecords(b.entries, (*barclaycardRecord).convertRecord, filepath)
 }

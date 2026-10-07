@@ -175,6 +175,25 @@ func TestBatchConvertSetsCheckValidity(t *testing.T) {
 		t.Error("Expected duplicate InputDir/FileGlobPattern error")
 	}
 
+	// An empty glob pattern matches the same files as "*"
+	s = BatchConvertSets{
+		BatchConvertSet{
+			Name:      "name1",
+			InputDir:  "/my/path1",
+			OutputDir: "/my/path2",
+		},
+		BatchConvertSet{
+			Name:            "name2",
+			InputDir:        "/my/path1",
+			OutputDir:       "/my/path4",
+			FileGlobPattern: "*",
+		},
+	}
+
+	if s.CheckValidity() == nil {
+		t.Error("Expected duplicate InputDir/FileGlobPattern error for empty and \"*\" pattern")
+	}
+
 	// The input directory and the glob pattern are compared separately, not
 	// as concatenated string, which made these two sets duplicates
 	s = BatchConvertSets{
