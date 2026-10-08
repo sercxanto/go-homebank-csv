@@ -175,6 +175,25 @@ func TestBatchConvertSetsCheckValidity(t *testing.T) {
 		t.Error("Expected duplicate InputDir/FileGlobPattern error")
 	}
 
+	// The output directory of one set is the input directory of another one,
+	// in both orders of the sets
+	setA := BatchConvertSet{
+		Name:      "A",
+		InputDir:  "/my/bank",
+		OutputDir: "/my/convertedA",
+	}
+	setB := BatchConvertSet{
+		Name:      "B",
+		InputDir:  "/my/convertedA",
+		OutputDir: "/my/convertedB",
+	}
+	for _, sets := range []BatchConvertSets{{setA, setB}, {setB, setA}} {
+		err := sets.CheckValidity()
+		if err == nil || !strings.Contains(err.Error(), "OutputDir of 'A' is the InputDir of 'B'") {
+			t.Errorf("Expected error about OutputDir of 'A', got '%v'", err)
+		}
+	}
+
 	// An empty glob pattern matches the same files as "*"
 	s = BatchConvertSets{
 		BatchConvertSet{

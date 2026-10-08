@@ -90,7 +90,8 @@ The fields have the following meaning:
 
 * `name`: The name of the entry. The name must be unique.
 * `inputdir`: Where to search for files (non recursively).
-* `outputdir`: Where to place the converted files.
+* `outputdir`: Where to place the converted files. It must not be the `inputdir`
+  of the same or another entry.
 
 The minimal version can be amended by optional settings:
 
