@@ -157,6 +157,7 @@ func (s BatchConvertSet) CheckValidity() error {
 //   - invalid CheckValidity() of entry
 //   - duplicate Name
 //   - duplicate InputDir / FileGlobPattern combination
+//   - OutputDir of one entry is the InputDir of another one
 func (s BatchConvertSets) CheckValidity() error {
 
 	// inputFiles identifies the input files of a set
@@ -188,6 +189,22 @@ func (s BatchConvertSets) CheckValidity() error {
 				entry.InputDir, entry.FileGlobPattern)
 		}
 		inputs[input] = true
+	}
+
+	// The converted files of one set would be input files of the other one.
+	// They are no supported source format, so their conversion would fail on
+	// every run.
+	inputDirs := make(map[string]string, len(s))
+	for _, entry := range s {
+		if _, ok := inputDirs[entry.InputDir]; !ok {
+			inputDirs[entry.InputDir] = entry.Name
+		}
+	}
+	for _, entry := range s {
+		if name, ok := inputDirs[entry.OutputDir]; ok {
+			return fmt.Errorf("OutputDir of '%s' is the InputDir of '%s' ('%s')",
+				entry.Name, name, entry.OutputDir)
+		}
 	}
 
 	return nil
