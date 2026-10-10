@@ -1,0 +1,55 @@
+version: '3'
+
+vars:
+  # go env honors GOOS and GOARCH from the environment, so cross-compiling
+  # works with e.g. `GOOS=windows task build`
+  GOOS:
+    sh: go env GOOS
+  GOARCH:
+    sh: go env GOARCH
+  GOLANGCI_LINT_VERSION: v2.14.0
+
+tasks:
+  default:
+    desc: Lint, test and build
+    cmds:
+      - task: lint
+      - task: test
+      - task: build
+      - echo "Finished successfully"
+    silent: true
+
+  install-tools:
+    desc: Install the development tools
+    cmds:
+      - >-
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/{{.GOLANGCI_LINT_VERSION}}/install.sh
+        | sh -s -- -b "$(go env GOPATH)/bin" {{.GOLANGCI_LINT_VERSION}}
+      - go install golang.org/x/pkgsite/cmd/pkgsite@latest
+      - go install github.com/miniscruff/changie@latest
+      - GOTOOLCHAIN=auto go install github.com/goreleaser/goreleaser/v2@latest
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: Run the tests
+    cmds:
+      - go test -v -cover ./...
+
+  build:
+    desc: Build the CLI into bin/<os>-<arch>
+    cmds:
+      - go build -o bin/{{.GOOS}}-{{.GOARCH}}/go-homebank-csv ./cmd/go-homebank-csv
+
+  doc-serve:
+    desc: Serve the documentation with pkgsite and open a web browser
+    cmds:
+      - pkgsite -open
+
+  clean:
+    desc: Remove build and release output
+    cmds:
+      - rm -rf bin dist

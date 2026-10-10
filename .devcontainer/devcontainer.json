@@ -13,7 +13,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "make install-tools",
+	"postCreateCommand": "GOTOOLCHAIN=auto go install github.com/go-task/task/v3/cmd/task@v3.54.0 && task install-tools",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
