@@ -1,0 +1,7 @@
+kind: Fixed
+body: |-
+  Report the line of a malformed value as the line in the file, as shown by a
+  text editor. Empty lines and fields spanning several lines were not counted,
+  e.g. for Comdirect and DKB exports the reported line was too small. A
+  malformed CSV file now reports its line in `ParseError.Line` as well
+time: 2026-10-10T17:00:00.000000000Z

@@ -54,14 +54,14 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	csvReader := csv.NewReader(bomStripped)
 	csvReader.Comma = ';'
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
-	records, err := csvReader.ReadAll()
+	records, err := readCSVRecords(csvReader)
 	if err != nil {
-		return &ParseError{Type: IOError, Err: err}
+		return err
 	}
 
 	var headerIndex = -1
 	for i, record := range records {
-		if isValidDkbHeader(record) {
+		if isValidDkbHeader(record.fields) {
 			headerIndex = i
 			break
 		}
@@ -71,8 +71,8 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		return &ParseError{Type: HeaderError}
 	}
 
-	for lineNr, row := range records[headerIndex+1:] {
-		nonEmptyLineNr := headerIndex + lineNr + 2
+	for _, record := range records[headerIndex+1:] {
+		row := record.fields
 		if len(row) != 12 {
 			continue
 		}
@@ -83,7 +83,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  nonEmptyLineNr,
+				Line:  record.line(0),
 				Field: "Buchungsdatum",
 				Err:   err,
 			}
@@ -92,7 +92,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  nonEmptyLineNr,
+				Line:  record.line(1),
 				Field: "Wertstellung",
 				Err:   err,
 			}
@@ -104,7 +104,7 @@ func (p *dkbParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  nonEmptyLineNr,
+				Line:  record.line(8),
 				Field: "Betrag (€)",
 				Err:   err,
 			}

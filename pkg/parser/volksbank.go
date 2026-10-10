@@ -34,18 +34,18 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	bomStripped := transform.NewReader(infile, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
 	csvReader := csv.NewReader(bomStripped)
 	csvReader.Comma = ';'
-	records, err := csvReader.ReadAll()
+	records, err := readCSVRecords(csvReader)
 	if err != nil {
-		return &ParseError{Type: IOError, Err: err}
+		return err
 	}
 	if len(records) == 0 {
 		return &ParseError{Type: HeaderError}
 	}
 
-	if !isValidVolksbankHeader(records[0]) {
+	if !isValidVolksbankHeader(records[0].fields) {
 		return &ParseError{
 			Type: HeaderError,
-			Line: 1,
+			Line: records[0].line(0),
 		}
 	}
 
@@ -54,12 +54,13 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 		return nil
 	}
 
-	for lineNr, row := range records[1:] {
+	for _, record := range records[1:] {
+		row := record.fields
 		date, err := time.Parse("02.01.2006", row[4])
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + 2,
+				Line:  record.line(4),
 				Field: "Buchungstag",
 				Err:   err,
 			}
@@ -70,7 +71,7 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + 2,
+				Line:  record.line(11),
 				Field: "Betrag",
 				Err:   err,
 			}

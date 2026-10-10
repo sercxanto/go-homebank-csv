@@ -88,8 +88,8 @@ func TestDkbParseFileNokWrongBuchungsdatum(t *testing.T) {
 		if pError.Type != DataParsingError {
 			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
-		if pError.Line != 5 {
-			t.Errorf("Expected error on line 5, got %d", pError.Line)
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
 		}
 		if pError.Field != "Buchungsdatum" {
 			t.Errorf("Expected error on field 'Buchungsdatum', got '%s'", pError.Field)
@@ -114,8 +114,8 @@ func TestDkbParseFileNokWrongWertstellung(t *testing.T) {
 		if pError.Type != DataParsingError {
 			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
-		if pError.Line != 5 {
-			t.Errorf("Expected error on line 5, got %d", pError.Line)
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
 		}
 		if pError.Field != "Wertstellung" {
 			t.Errorf("Expected error on field 'Wertstellung', got '%s'", pError.Field)
@@ -140,8 +140,8 @@ func TestDkbParseFileNokWrongBetrag(t *testing.T) {
 		if pError.Type != DataParsingError {
 			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
-		if pError.Line != 5 {
-			t.Errorf("Expected error on line 5, got %d", pError.Line)
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
 		}
 		if pError.Field != "Betrag (€)" {
 			t.Errorf("Expected error on field 'Betrag (€)', got '%s'", pError.Field)

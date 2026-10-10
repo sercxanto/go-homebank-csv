@@ -89,8 +89,8 @@ func TestComdirectParseFileNokWrongBuchungstag(t *testing.T) {
 		if pError.Type != DataParsingError {
 			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
-		if pError.Line != 3 {
-			t.Errorf("Expected error on line 3, got %d", pError.Line)
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
 		}
 		if pError.Field != "Buchungstag" {
 			t.Errorf("Expected error on field 'Buchungstag', got %s", pError.Field)
@@ -115,8 +115,8 @@ func TestComdirectParseFileNokWrongUmsatz(t *testing.T) {
 		if pError.Type != DataParsingError {
 			t.Errorf("DataParsingError expected, got '%s' instead", pError.Type)
 		}
-		if pError.Line != 3 {
-			t.Errorf("Expected error on line 3, got %d", pError.Line)
+		if pError.Line != 6 {
+			t.Errorf("Expected error on line 6, got %d", pError.Line)
 		}
 		if pError.Field != "Umsatz in EUR" {
 			t.Errorf("Expected error on field 'Umsatz in EUR', got %s", pError.Field)
