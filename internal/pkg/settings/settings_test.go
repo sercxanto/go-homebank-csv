@@ -590,6 +590,24 @@ func TestSettingsLoadFromFileResolvesRelativePaths(t *testing.T) {
 	}
 }
 
+// An unsupported path shortcut in a config file is reported
+func TestSettingsLoadFromFileInvalidShortcut(t *testing.T) {
+	config := "batchconvert:\n" +
+		"  sets:\n" +
+		"    - name: invalid\n" +
+		"      inputdir: xdg:unknown\n" +
+		"      outputdir: output\n"
+	fpath := filepath.Join(t.TempDir(), "config.yml")
+	if err := os.WriteFile(fpath, []byte(config), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var s Settings
+	err := s.LoadFromFile(fpath)
+	if err == nil || !strings.Contains(err.Error(), "unknown xdg shortcut 'unknown'") {
+		t.Errorf("Expected error about the unknown shortcut, got '%v'", err)
+	}
+}
+
 func TestResolveRelativePath(t *testing.T) {
 	baseDir := filepath.Join(t.TempDir(), "config")
 	cases := []struct{ path, expected string }{

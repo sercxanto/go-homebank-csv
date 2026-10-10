@@ -88,13 +88,11 @@ func (s *Settings) LoadFromFile(filePath string) error {
 		return err
 	}
 	// Relative paths refer to the directory of the config file, not to the
-	// working directory, which differs e.g. when run by cron
-	// filepath.Abs fails only if the working directory is unknown. Then the
-	// paths stay relative to the directory of filePath as given.
-	if absFilePath, err := filepath.Abs(filePath); err == nil {
-		filePath = absFilePath
-	}
-	s.BatchConvert.Sets.resolveRelativePaths(filepath.Dir(filePath))
+	// working directory, which differs e.g. when run by cron. filepath.Abs
+	// fails only if the working directory is unknown. Then it returns an
+	// empty path and the paths stay relative to the working directory.
+	absFilePath, _ := filepath.Abs(filePath)
+	s.BatchConvert.Sets.resolveRelativePaths(filepath.Dir(absFilePath))
 	return nil
 }
 
