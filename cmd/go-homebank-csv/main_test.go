@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/sercxanto/go-homebank-csv/pkg/parser"
 )
 
 const (
@@ -238,6 +240,21 @@ func TestMainErrorOnStderr(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "Converting file") {
 		t.Errorf("Expected the regular output on stdout, got: %q", stdout)
+	}
+}
+
+// An unsupported format is rejected. The CLI accepts supported formats only,
+// so the command is run directly.
+func TestConvertCmdUnsupportedFormat(t *testing.T) {
+	infile := writeTempFile(t, "moneywallet.csv", "wallet,currency,category,datetime,money,description\n")
+	cmd := ConvertCmd{
+		Format:  parser.NewSourceFormat(999),
+		Infile:  infile,
+		Outfile: filepath.Join(filepath.Dir(infile), "output.csv"),
+	}
+	err := cmd.Run()
+	if err == nil || !strings.Contains(err.Error(), "unsupported source format 999") {
+		t.Errorf("Expected unsupported source format error, got '%v'", err)
 	}
 }
 

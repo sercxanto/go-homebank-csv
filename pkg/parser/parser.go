@@ -39,19 +39,28 @@ var sourceFormats = map[SourceFormat]string{
 // New returns a new parser for the given source format.
 // It returns an error if the format is not supported.
 func New(s SourceFormat) (Parser, error) {
-	switch s {
-	case MoneyWallet:
-		return &moneywalletParser{}, nil
-	case Barclaycard:
-		return &barclaycardParser{}, nil
-	case Volksbank:
-		return &volksbankParser{}, nil
-	case Comdirect:
-		return &comdirectParser{}, nil
-	case DKB:
-		return &dkbParser{}, nil
+	if p := newParser(s); p != nil {
+		return p, nil
 	}
 	return nil, fmt.Errorf("unsupported source format %d", int(s))
+}
+
+// newParser returns a new parser for the given source format, nil if the
+// format is not supported
+func newParser(s SourceFormat) Parser {
+	switch s {
+	case MoneyWallet:
+		return &moneywalletParser{}
+	case Barclaycard:
+		return &barclaycardParser{}
+	case Volksbank:
+		return &volksbankParser{}
+	case Comdirect:
+		return &comdirectParser{}
+	case DKB:
+		return &dkbParser{}
+	}
+	return nil
 }
 
 // SourceFormats returns the list of supported source formats.
@@ -190,12 +199,11 @@ var ErrUnknownFormat = errors.New("cannot deduce format")
 //	  ...
 func Detect(filepath string) (Parser, error) {
 	errs := []error{ErrUnknownFormat}
+	// SourceFormats returns supported formats only, for which newParser
+	// never returns nil
 	for _, f := range SourceFormats() {
-		p, err := New(f)
-		if err != nil {
-			return nil, err
-		}
-		err = p.ParseFile(filepath)
+		p := newParser(f)
+		err := p.ParseFile(filepath)
 		if err == nil {
 			return p, nil
 		}
