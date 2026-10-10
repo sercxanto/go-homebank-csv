@@ -20,6 +20,8 @@ HomeBank is a crossplatform free and easy accounting software.
 * Barclaycard
   * Not exactly CSV, this is the excel export format of Barclays VISA card as
     found on [www.barclays.de](https://www.barclays.de).
+  * The card is now branded "easybank" ([www.easybank.de](https://www.easybank.de)).
+    The format name stays `Barclaycard`.
 * Volksbank
   * This is the CSV export format used by a German Volksbank.
     Most probably all Volksbanks have the same format.
