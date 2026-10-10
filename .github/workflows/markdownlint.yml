@@ -1,0 +1,32 @@
+name: markdownlint
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# A new push to a pull request cancels the checks of the previous one. Other
+# runs get a group of their own (run_id), so that every commit on main is
+# checked.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The rules are configured in .markdownlint.json
+      - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+        with:
+          # The version files in .changes are fragments of CHANGELOG.md without
+          # a top-level heading, CLAUDE.md only includes AGENTS.md
+          globs: |
+            **/*.md
+            !.changes/**
+            !CLAUDE.md
