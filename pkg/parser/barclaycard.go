@@ -152,6 +152,11 @@ func (b *barclaycardParser) ParseFile(filepath string) error {
 				value:           value,
 				description:     barclaycardCell(row, 14),
 			}
+			// "Beschreibung" names the payee for card payments only. It is
+			// taken over as it is, without removing any spaces.
+			if barclaycardCell(row, 5) == "Belastung" {
+				bRecord.payee = barclaycardCell(row, 4)
+			}
 			b.entries = append(b.entries, bRecord)
 		} else if isValidBarclaycardHeader(row) {
 			inDataSection = true

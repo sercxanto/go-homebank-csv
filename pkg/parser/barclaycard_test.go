@@ -223,6 +223,15 @@ func TestBarclaycardParseFileShortRows(t *testing.T) {
 		}
 	}
 
+	// The payee is taken from "Beschreibung" as it is, including spaces
+	expectedPayees := []string{"PayPal Europe", "XYZ  Rotterdam", "Abc"}
+	for i, expected := range expectedPayees {
+		if bc.entries[i].payee != expected {
+			t.Errorf("Entry %d: expected payee '%s', got '%s'",
+				i, expected, bc.entries[i].payee)
+		}
+	}
+
 	expectedDates := []time.Time{
 		time.Date(2020, 9, 28, 0, 0, 0, 0, time.UTC),
 		time.Date(2020, 9, 19, 0, 0, 0, 0, time.UTC),
@@ -249,6 +258,7 @@ func TestBarclaycardConvertRecord(t *testing.T) {
 		bookingDate:     time.Date(2014, 3, 2, 0, 0, 0, 0, time.UTC),
 		value:           10.0,
 		description:     "description",
+		payee:           "payee",
 	}
 	h := m.convertRecord()
 	if h.amount != m.value {
@@ -263,7 +273,7 @@ func TestBarclaycardConvertRecord(t *testing.T) {
 	if h.payment != 1 {
 		t.Error("Payment does not match")
 	}
-	if h.payee != "" {
+	if h.payee != m.payee {
 		t.Error("Payee does not match")
 	}
 	if h.memo != "" {
