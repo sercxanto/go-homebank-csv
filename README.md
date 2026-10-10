@@ -149,6 +149,10 @@ configuration works on different machines:
 These shortcuts rely on the platform specific resolution provided by [`adrg/xdg`](https://pkg.go.dev/github.com/adrg/xdg)
 and no other environment variables are expanded.
 
+A relative path, e.g. `finance/inbox` or `../inbox`, refers to the directory of
+the config file, not to the current working directory. So the same paths are
+used, no matter from where `go-homebank-csv` is started, e.g. by cron.
+
 #### Command line example
 
 With a config file like this:

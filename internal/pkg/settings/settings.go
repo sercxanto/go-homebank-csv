@@ -84,7 +84,18 @@ func (s *Settings) LoadFromFile(filePath string) error {
 		// The error names line and column only, so add the file
 		return fmt.Errorf("config file '%s': %w", filePath, err)
 	}
-	return s.NormalizePaths()
+	if err := s.NormalizePaths(); err != nil {
+		return err
+	}
+	// Relative paths refer to the directory of the config file, not to the
+	// working directory, which differs e.g. when run by cron
+	// filepath.Abs fails only if the working directory is unknown. Then the
+	// paths stay relative to the directory of filePath as given.
+	if absFilePath, err := filepath.Abs(filePath); err == nil {
+		filePath = absFilePath
+	}
+	s.BatchConvert.Sets.resolveRelativePaths(filepath.Dir(filePath))
+	return nil
 }
 
 // LoadFromDefaultFile loads settings from default config file.
@@ -239,6 +250,27 @@ func (s *BatchConvertSet) NormalizePaths() error {
 	s.InputDir = expandedInput
 	s.OutputDir = expandedOutput
 	return nil
+}
+
+// resolveRelativePaths makes relative paths of all sets relative to baseDir.
+func (s BatchConvertSets) resolveRelativePaths(baseDir string) {
+	for i := range s {
+		s[i].InputDir = resolveRelativePath(s[i].InputDir, baseDir)
+		s[i].OutputDir = resolveRelativePath(s[i].OutputDir, baseDir)
+	}
+}
+
+// resolveRelativePath returns path joined to baseDir if path is relative.
+//
+// An empty path stays empty, so that it is reported by CheckValidity. A path
+// starting with a separator or a volume name, e.g. "\finance" or "D:finance"
+// on Windows, is not relative to a directory, even if it is not absolute.
+func resolveRelativePath(path string, baseDir string) string {
+	if path == "" || filepath.IsAbs(path) || filepath.VolumeName(path) != "" ||
+		strings.HasPrefix(path, "/") || strings.HasPrefix(path, string(filepath.Separator)) {
+		return path
+	}
+	return filepath.Join(baseDir, path)
 }
 
 func expandPath(raw string) (string, error) {
