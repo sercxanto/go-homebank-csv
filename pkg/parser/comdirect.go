@@ -42,14 +42,14 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	csvReader := csv.NewReader(reader)
 	csvReader.Comma = ';'
 	csvReader.FieldsPerRecord = -1 // Enable variable length records
-	records, err := csvReader.ReadAll()
+	records, err := readCSVRecords(csvReader)
 	if err != nil {
-		return &ParseError{Type: IOError, Err: err}
+		return err
 	}
 
 	var headerIndex = -1
 	for i, record := range records {
-		if isValidComdirectHeader(record) {
+		if isValidComdirectHeader(record.fields) {
 			headerIndex = i
 			break
 		}
@@ -59,7 +59,8 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		return &ParseError{Type: HeaderError}
 	}
 
-	for lineNr, row := range records[headerIndex+1:] {
+	for _, record := range records[headerIndex+1:] {
+		row := record.fields
 		if len(row) != 6 {
 			continue
 		}
@@ -70,7 +71,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + headerIndex + 2,
+				Line:  record.line(0),
 				Field: "Buchungstag",
 				Err:   err,
 			}
@@ -82,7 +83,7 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + headerIndex + 2,
+				Line:  record.line(4),
 				Field: "Umsatz in EUR",
 				Err:   err,
 			}

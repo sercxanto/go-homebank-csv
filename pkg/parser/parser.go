@@ -134,8 +134,11 @@ type ParseError struct {
 	Type ErrorType
 
 	// Optional line number where the error occurs. Line numbers are
-	// 1 based. The value "0" means no line number applies here, e.g.
-	// when no header has been found. Empty lines are not counted.
+	// 1 based and count all lines of the file, including empty ones, like
+	// a text editor does. For a field spanning several lines it is the line
+	// where the field starts. For Excel files it is the row number. The
+	// value "0" means no line number applies here, e.g. when no header has
+	// been found.
 	Line int
 
 	// Optional field name where the error occurred

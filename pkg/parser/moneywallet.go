@@ -31,17 +31,17 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 	}
 	defer infile.Close()
 	csvReader := csv.NewReader(infile)
-	records, err := csvReader.ReadAll()
+	records, err := readCSVRecords(csvReader)
 	if err != nil {
-		return &ParseError{Type: IOError, Err: err}
+		return err
 	}
 	if len(records) == 0 {
 		return &ParseError{Type: HeaderError}
 	}
-	if !isValidMoneyWalletHeader(records[0]) {
+	if !isValidMoneyWalletHeader(records[0].fields) {
 		return &ParseError{
 			Type: HeaderError,
-			Line: 1,
+			Line: records[0].line(0),
 		}
 	}
 	// Only header found, no entries
@@ -49,12 +49,13 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 		return nil
 	}
 
-	for lineNr, row := range records[1:] {
+	for _, record := range records[1:] {
+		row := record.fields
 		date, err := time.Parse("2006-01-02 15:04:05", row[3])
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + 2,
+				Line:  record.line(3),
 				Field: "datetime",
 				Err:   err,
 			}
@@ -66,7 +67,7 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 		if err != nil {
 			return &ParseError{
 				Type:  DataParsingError,
-				Line:  lineNr + 2,
+				Line:  record.line(4),
 				Field: "money",
 				Err:   err,
 			}
