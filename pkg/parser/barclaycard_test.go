@@ -9,7 +9,7 @@ import (
 
 func TestBarclaycardName(t *testing.T) {
 	mw := &barclaycardParser{}
-	if mw.GetFormat() != Barclaycard {
+	if mw.SourceFormat() != Barclaycard {
 		t.Error("Wrong format")
 	}
 }
@@ -28,7 +28,7 @@ func TestBarclaycardParseFileNonExisting(t *testing.T) {
 	} else {
 		t.Error("Expected ParseError")
 	}
-	if bc.GetNumberOfEntries() != 0 {
+	if bc.Len() != 0 {
 		t.Error("Entries should be empty")
 	}
 }
@@ -211,8 +211,8 @@ func TestBarclaycardParseFileShortRows(t *testing.T) {
 	}
 
 	// The "vorgemerkt" entry without "Buchungsdatum" and the empty row are skipped
-	if bc.GetNumberOfEntries() != 3 {
-		t.Fatalf("Expected 3 entries, got %d", bc.GetNumberOfEntries())
+	if bc.Len() != 3 {
+		t.Fatalf("Expected 3 entries, got %d", bc.Len())
 	}
 
 	expectedDescriptions := []string{"DetailA", "", "DetailB"}

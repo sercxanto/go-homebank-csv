@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -274,6 +275,13 @@ func TestBatchConvertNonExistentOutputDir(t *testing.T) {
 	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
 		t.Fatalf("BatchConvert should return error")
 	}
+	// The error names the set and keeps the cause
+	if !strings.Contains(err.Error(), "set 'my name': outputdir") {
+		t.Errorf("Expected the error to name the set, got '%s'", err)
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected the error to wrap fs.ErrNotExist, got '%s'", err)
+	}
 }
 
 func TestBatchConvertOutputDirNotDir(t *testing.T) {
@@ -301,6 +309,63 @@ func TestBatchConvertOutputDirNotDir(t *testing.T) {
 	}
 	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
 		t.Fatalf("BatchConvert should return error")
+	}
+	expected := "set 'my name': outputdir '" + testfilePath + "' is not a directory"
+	if err.Error() != expected {
+		t.Errorf("Expected error %q, got '%s'", expected, err)
+	}
+}
+
+// An input file which cannot be accessed stops the conversion with an error
+// naming the set
+func TestBatchConvertInputFileNotAccessible(t *testing.T) {
+	inputDir := t.TempDir()
+	// The target of the link does not exist, so it is found by the glob
+	// pattern, but cannot be accessed
+	if err := os.Symlink(filepath.Join(inputDir, "missing"), filepath.Join(inputDir, "link.csv")); err != nil {
+		t.Skipf("Cannot create symbolic link: %v", err)
+	}
+	s := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "my name",
+				InputDir:  inputDir,
+				OutputDir: t.TempDir(),
+			},
+		},
+	}
+	_, err := BatchConvert(s, time.Now(), nil, nil)
+	if err == nil || !strings.HasPrefix(err.Error(), "set 'my name': ") {
+		t.Errorf("Expected an error naming the set, got '%v'", err)
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected the error to wrap fs.ErrNotExist, got '%v'", err)
+	}
+}
+
+// A set with an unsupported format fails the conversion of its files
+func TestBatchConvertUnsupportedFormat(t *testing.T) {
+	inputDir := t.TempDir()
+	infile := filepath.Join(inputDir, "input.csv")
+	if err := os.WriteFile(infile, []byte("content\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s := settings.BatchConvertSettings{
+		Sets: []settings.BatchConvertSet{
+			{
+				Name:      "my name",
+				InputDir:  inputDir,
+				OutputDir: t.TempDir(),
+				Format:    parser.NewSourceFormat(999),
+			},
+		},
+	}
+	status, err := BatchConvert(s, time.Now(), nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "unsupported source format 999") {
+		t.Errorf("Expected unsupported source format error, got '%v'", err)
+	}
+	if len(status) != 1 || len(status[0].Files) != 1 || status[0].Files[0].Status != ConversionError {
+		t.Errorf("Expected the file to fail, got %+v", status)
 	}
 }
 
@@ -391,8 +456,8 @@ func TestBatchConvertConversionError(t *testing.T) {
 	if !strings.Contains(err.Error(), emptyFilePath) {
 		t.Errorf("Expected the error to name the failed file, got '%s'", err)
 	}
-	if status[0].Files[0].Err == nil {
-		t.Errorf("Expected the cause of the failure in the file status")
+	if !errors.Is(status[0].Files[0].Err, parser.ErrUnknownFormat) {
+		t.Errorf("Expected ErrUnknownFormat in the file status, got '%v'", status[0].Files[0].Err)
 	}
 
 	if !reflect.DeepEqual(status, cbStatus) {

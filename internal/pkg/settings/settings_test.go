@@ -122,6 +122,62 @@ func TestBatchConvertSetCheckValidity(t *testing.T) {
 	}
 }
 
+// The errors of an invalid set name the set and the key of the config file,
+// so that the user can find the wrong entry
+func TestBatchConvertSetsCheckValidityNamesSet(t *testing.T) {
+	valid := BatchConvertSet{
+		Name:      "Valid",
+		InputDir:  "/my/path1",
+		OutputDir: "/my/path2",
+	}
+	cases := []struct {
+		name     string
+		set      BatchConvertSet
+		expected string
+	}{
+		{
+			name:     "empty name",
+			set:      BatchConvertSet{InputDir: "/my/path3", OutputDir: "/my/path4"},
+			expected: "set 2: name is empty",
+		},
+		{
+			name:     "empty inputdir",
+			set:      BatchConvertSet{Name: "Bank", OutputDir: "/my/path4"},
+			expected: "set 'Bank': inputdir is empty",
+		},
+		{
+			name:     "empty outputdir",
+			set:      BatchConvertSet{Name: "Bank", InputDir: "/my/path3"},
+			expected: "set 'Bank': outputdir is empty",
+		},
+		{
+			name:     "same directories",
+			set:      BatchConvertSet{Name: "Bank", InputDir: "/my/path3", OutputDir: "/my/path3"},
+			expected: "set 'Bank': inputdir and outputdir are the same directory '/my/path3'",
+		},
+		{
+			name: "negative filemaxagedays",
+			set: BatchConvertSet{Name: "Bank", InputDir: "/my/path3", OutputDir: "/my/path4",
+				FileMaxAgeDays: -2},
+			expected: "set 'Bank': filemaxagedays must not be negative, got -2",
+		},
+		{
+			name: "invalid fileglobpattern",
+			set: BatchConvertSet{Name: "Bank", InputDir: "/my/path3", OutputDir: "/my/path4",
+				FileGlobPattern: "["},
+			expected: "set 'Bank': fileglobpattern '[' is invalid",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := BatchConvertSets{valid, c.set}.CheckValidity()
+			if err == nil || err.Error() != c.expected {
+				t.Errorf("Expected error %q, got '%v'", c.expected, err)
+			}
+		})
+	}
+}
+
 func TestBatchConvertSetsCheckValidity(t *testing.T) {
 
 	s := BatchConvertSets{
@@ -189,7 +245,7 @@ func TestBatchConvertSetsCheckValidity(t *testing.T) {
 	}
 	for _, sets := range []BatchConvertSets{{setA, setB}, {setB, setA}} {
 		err := sets.CheckValidity()
-		if err == nil || !strings.Contains(err.Error(), "OutputDir of 'A' is the InputDir of 'B'") {
+		if err == nil || !strings.Contains(err.Error(), "outputdir of 'A' is the inputdir of 'B'") {
 			t.Errorf("Expected error about OutputDir of 'A', got '%v'", err)
 		}
 	}

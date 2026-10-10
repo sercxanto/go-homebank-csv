@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/sercxanto/go-homebank-csv/pkg/parser"
 )
 
 const (
@@ -229,11 +231,30 @@ func TestMainErrorOnStderr(t *testing.T) {
 	if !strings.Contains(stderr, "cannot deduce format") {
 		t.Errorf("Expected the error on stderr, got: %q", stderr)
 	}
+	// The reason of each parser is reported, e.g. of the first one
+	if !strings.Contains(stderr, "MoneyWallet: HeaderError in line 1") {
+		t.Errorf("Expected the reasons of the parsers on stderr, got: %q", stderr)
+	}
 	if strings.Contains(stdout, "cannot deduce format") {
 		t.Errorf("Expected no error on stdout, got: %q", stdout)
 	}
 	if !strings.Contains(stdout, "Converting file") {
 		t.Errorf("Expected the regular output on stdout, got: %q", stdout)
+	}
+}
+
+// An unsupported format is rejected. The CLI accepts supported formats only,
+// so the command is run directly.
+func TestConvertCmdUnsupportedFormat(t *testing.T) {
+	infile := writeTempFile(t, "moneywallet.csv", "wallet,currency,category,datetime,money,description\n")
+	cmd := ConvertCmd{
+		Format:  parser.NewSourceFormat(999),
+		Infile:  infile,
+		Outfile: filepath.Join(filepath.Dir(infile), "output.csv"),
+	}
+	err := cmd.Run()
+	if err == nil || !strings.Contains(err.Error(), "unsupported source format 999") {
+		t.Errorf("Expected unsupported source format error, got '%v'", err)
 	}
 }
 
@@ -268,7 +289,7 @@ func TestMainBatchConvertInvalidConfig(t *testing.T) {
 	if exitCode == 0 {
 		t.Errorf("Expected non zero exit code, got %d. Output: %s", exitCode, output)
 	}
-	if !strings.Contains(output, "InputDir == OutputDir") {
+	if !strings.Contains(output, "set 'test': inputdir and outputdir are the same directory") {
 		t.Errorf("Expected the validation error in the output, got: %s", output)
 	}
 	if strings.Contains(output, "BatchConvert starting") {

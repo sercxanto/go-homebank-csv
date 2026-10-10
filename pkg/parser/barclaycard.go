@@ -22,11 +22,11 @@ type barclaycardParser struct {
 	entries []barclaycardRecord
 }
 
-func (b *barclaycardParser) GetFormat() SourceFormat {
+func (b *barclaycardParser) SourceFormat() SourceFormat {
 	return Barclaycard
 }
 
-func (b *barclaycardParser) GetNumberOfEntries() int {
+func (b *barclaycardParser) Len() int {
 	return len(b.entries)
 }
 

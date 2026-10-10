@@ -224,16 +224,16 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		var fileInfo os.FileInfo
 		fileInfo, err = os.Stat(set.OutputDir)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("set '%s': outputdir: %w", set.Name, err)
 		}
 		if !fileInfo.IsDir() {
-			return status, errors.New("outputDir is not a directory")
+			return status, fmt.Errorf("set '%s': outputdir '%s' is not a directory", set.Name, set.OutputDir)
 		}
 
 		var fileList []string
 		fileList, err = findFiles(set.InputDir, set.FileGlobPattern, getTimeFromMaxAgeDays(uint(set.FileMaxAgeDays), now))
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("set '%s': %w", set.Name, err)
 		}
 
 		setStatus := BatchSetStatus{
@@ -294,31 +294,25 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 				c(status, userData)
 			}
 
+			var err error
 			if set.Format == nil {
-				fileParser = parser.GetGuessedParser(infile)
-				if fileParser == nil {
-					err := errors.New("cannot deduce format")
-					status[setNr].Files[fileNr].Status = ConversionError
-					status[setNr].Files[fileNr].Err = err
-					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
-					if c != nil {
-						c(status, userData)
-					}
-					continue
-				}
+				fileParser, err = parser.Detect(infile)
 			} else {
-				fileParser = parser.GetParser(*set.Format)
-				if err := fileParser.ParseFile(infile); err != nil {
-					status[setNr].Files[fileNr].Status = ConversionError
-					status[setNr].Files[fileNr].Err = err
-					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
-					if c != nil {
-						c(status, userData)
-					}
-					continue
+				fileParser, err = parser.New(*set.Format)
+				if err == nil {
+					err = fileParser.ParseFile(infile)
 				}
 			}
-			status[setNr].Files[fileNr].Format = parser.NewSourceFormat(fileParser.GetFormat())
+			if err != nil {
+				status[setNr].Files[fileNr].Status = ConversionError
+				status[setNr].Files[fileNr].Err = err
+				fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
+				if c != nil {
+					c(status, userData)
+				}
+				continue
+			}
+			status[setNr].Files[fileNr].Format = parser.NewSourceFormat(fileParser.SourceFormat())
 			if err := fileParser.ConvertToHomebank(outfile); err != nil {
 				status[setNr].Files[fileNr].Status = ConversionError
 				status[setNr].Files[fileNr].Err = err

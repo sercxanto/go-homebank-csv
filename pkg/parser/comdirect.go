@@ -120,11 +120,11 @@ func (m *comdirectParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (m *comdirectParser) GetFormat() SourceFormat {
+func (m *comdirectParser) SourceFormat() SourceFormat {
 	return Comdirect
 }
 
-func (m *comdirectParser) GetNumberOfEntries() int {
+func (m *comdirectParser) Len() int {
 	return len(m.entries)
 }
 

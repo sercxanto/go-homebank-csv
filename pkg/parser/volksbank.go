@@ -87,11 +87,11 @@ func (m *volksbankParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (m *volksbankParser) GetFormat() SourceFormat {
+func (m *volksbankParser) SourceFormat() SourceFormat {
 	return Volksbank
 }
 
-func (m *volksbankParser) GetNumberOfEntries() int {
+func (m *volksbankParser) Len() int {
 	return len(m.entries)
 }
 

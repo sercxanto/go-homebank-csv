@@ -9,7 +9,7 @@ import (
 
 func TestDkbName(t *testing.T) {
 	c := &dkbParser{}
-	if c.GetFormat() != DKB {
+	if c.SourceFormat() != DKB {
 		t.Error("Wrong format")
 	}
 }
@@ -28,7 +28,7 @@ func TestDkbParseFileNonExisting(t *testing.T) {
 	} else {
 		t.Error("Expected ParseError")
 	}
-	if v.GetNumberOfEntries() != 0 {
+	if v.Len() != 0 {
 		t.Error("Entries should be empty")
 	}
 }

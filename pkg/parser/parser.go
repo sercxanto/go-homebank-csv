@@ -5,6 +5,7 @@ package parser
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -35,8 +36,18 @@ var sourceFormats = map[SourceFormat]string{
 	DKB:         "DKB",
 }
 
-// GetParser returns a parser for the given source format
-func GetParser(s SourceFormat) Parser {
+// New returns a new parser for the given source format.
+// It returns an error if the format is not supported.
+func New(s SourceFormat) (Parser, error) {
+	if p := newParser(s); p != nil {
+		return p, nil
+	}
+	return nil, fmt.Errorf("unsupported source format %d", int(s))
+}
+
+// newParser returns a new parser for the given source format, nil if the
+// format is not supported
+func newParser(s SourceFormat) Parser {
 	switch s {
 	case MoneyWallet:
 		return &moneywalletParser{}
@@ -52,14 +63,14 @@ func GetParser(s SourceFormat) Parser {
 	return nil
 }
 
-// GetSourceFormats returns the list of supported source formats.
+// SourceFormats returns the list of supported source formats.
 //
 // The formats are returned in the order in which they are defined. Sorting is
 // needed as the iteration order of a map is not specified: without it the
 // result differs between calls, which shows up in the output of the
-// "list-formats" command and in the order in which GetGuessedParser tries the
+// "list-formats" command and in the order in which Detect tries the
 // parsers.
-func GetSourceFormats() []SourceFormat {
+func SourceFormats() []SourceFormat {
 	formats := make([]SourceFormat, 0, len(sourceFormats))
 	for key := range sourceFormats {
 		formats = append(formats, key)
@@ -162,28 +173,43 @@ type Parser interface {
 	// Parse the given file into internal structure.
 	ParseFile(filepath string) error
 
-	// Returns the number of parsed entries.
-	GetNumberOfEntries() int
+	// Len returns the number of parsed entries.
+	Len() int
 
 	// Convert the internal structure into HomebankRecord CSV file.
 	ConvertToHomebank(filepath string) error
 
-	// Returns the format of the parser.
-	GetFormat() SourceFormat
+	// SourceFormat returns the format of the parser.
+	SourceFormat() SourceFormat
 }
 
-// GetGuessedParser tries to autodetect the file format.
-// It iterates through the available, calls the ParseFile function and returns the
-// first parser which does not fail with an error.
-// It returns nil if no parser could be found.
-func GetGuessedParser(filepath string) Parser {
-	for _, f := range GetSourceFormats() {
-		p := GetParser(f)
-		if err := p.ParseFile(filepath); err == nil {
-			return p
+// ErrUnknownFormat is the error of Detect if no parser accepts the file.
+var ErrUnknownFormat = errors.New("cannot deduce format")
+
+// Detect tries to autodetect the file format.
+// It iterates through the available formats, calls the ParseFile function and
+// returns the first parser which does not fail with an error.
+//
+// If no parser accepts the file, the returned error wraps ErrUnknownFormat and
+// the error of each parser, one line per format, e.g.
+//
+//	cannot deduce format
+//	  MoneyWallet: HeaderError in line 1
+//	  Barclaycard: IOError: zip: not a valid zip file
+//	  ...
+func Detect(filepath string) (Parser, error) {
+	errs := []error{ErrUnknownFormat}
+	// SourceFormats returns supported formats only, for which newParser
+	// never returns nil
+	for _, f := range SourceFormats() {
+		p := newParser(f)
+		err := p.ParseFile(filepath)
+		if err == nil {
+			return p, nil
 		}
+		errs = append(errs, fmt.Errorf("  %s: %w", f, err))
 	}
-	return nil
+	return nil, errors.Join(errs...)
 }
 
 // Payment types of a homebankRecord, as defined by the HomeBank CSV format.

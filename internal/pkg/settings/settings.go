@@ -128,24 +128,26 @@ func IsFileGlobPatternValid(pattern string) bool {
 //   - OutputDir == InputDir
 //   - FileMaxAgeDays < 0
 //   - FileGlobPattern is invalid
+//
+// The errors name the keys of the config file, not the fields of the struct.
 func (s BatchConvertSet) CheckValidity() error {
 	if s.Name == "" {
 		return errors.New("name is empty")
 	}
 	if s.InputDir == "" {
-		return errors.New("InputDir is empty")
+		return errors.New("inputdir is empty")
 	}
 	if s.OutputDir == "" {
-		return errors.New("OutputDir is empty")
+		return errors.New("outputdir is empty")
 	}
 	if s.InputDir == s.OutputDir {
-		return errors.New("InputDir == OutputDir")
+		return fmt.Errorf("inputdir and outputdir are the same directory '%s'", s.InputDir)
 	}
 	if s.FileMaxAgeDays < 0 {
-		return errors.New("FileMaxAgeDays < 0")
+		return fmt.Errorf("filemaxagedays must not be negative, got %d", s.FileMaxAgeDays)
 	}
 	if !IsFileGlobPatternValid(s.FileGlobPattern) {
-		return errors.New("FileGlobPattern is invalid")
+		return fmt.Errorf("fileglobpattern '%s' is invalid", s.FileGlobPattern)
 	}
 	return nil
 }
@@ -154,7 +156,8 @@ func (s BatchConvertSet) CheckValidity() error {
 //
 // Possible errors:
 //
-//   - invalid CheckValidity() of entry
+//   - invalid CheckValidity() of entry, prefixed with the name of the entry
+//     or, if the name is empty, its 1 based position
 //   - duplicate Name
 //   - duplicate InputDir / FileGlobPattern combination
 //   - OutputDir of one entry is the InputDir of another one
@@ -169,12 +172,15 @@ func (s BatchConvertSets) CheckValidity() error {
 	names := make(map[string]bool, len(s))
 	inputs := make(map[inputFiles]bool, len(s))
 
-	for _, entry := range s {
+	for i, entry := range s {
 		if err := entry.CheckValidity(); err != nil {
-			return err
+			if entry.Name == "" {
+				return fmt.Errorf("set %d: %w", i+1, err)
+			}
+			return fmt.Errorf("set '%s': %w", entry.Name, err)
 		}
 		if names[entry.Name] {
-			return fmt.Errorf("duplicate Name '%s' detected", entry.Name)
+			return fmt.Errorf("duplicate name '%s' detected", entry.Name)
 		}
 		names[entry.Name] = true
 
@@ -185,7 +191,7 @@ func (s BatchConvertSets) CheckValidity() error {
 		}
 		input := inputFiles{entry.InputDir, pattern}
 		if inputs[input] {
-			return fmt.Errorf("duplicate InputDir / FileGlobPattern combination detected ('%s', '%s')",
+			return fmt.Errorf("duplicate inputdir / fileglobpattern combination detected ('%s', '%s')",
 				entry.InputDir, entry.FileGlobPattern)
 		}
 		inputs[input] = true
@@ -202,7 +208,7 @@ func (s BatchConvertSets) CheckValidity() error {
 	}
 	for _, entry := range s {
 		if name, ok := inputDirs[entry.OutputDir]; ok {
-			return fmt.Errorf("OutputDir of '%s' is the InputDir of '%s' ('%s')",
+			return fmt.Errorf("outputdir of '%s' is the inputdir of '%s' ('%s')",
 				entry.Name, name, entry.OutputDir)
 		}
 	}

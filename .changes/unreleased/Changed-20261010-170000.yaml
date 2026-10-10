@@ -1,0 +1,8 @@
+kind: Changed
+body: |-
+  Rename the API of the package `parser` to idiomatic Go names, which breaks
+  callers: `GetParser` is now `New` and returns an error for an unsupported
+  format, `GetSourceFormats` is `SourceFormats`, and the methods `GetFormat`
+  and `GetNumberOfEntries` of `Parser` are `SourceFormat` and `Len`. Use
+  `Detect` instead of the removed `GetGuessedParser`
+time: 2026-10-10T17:00:00.000000000Z
