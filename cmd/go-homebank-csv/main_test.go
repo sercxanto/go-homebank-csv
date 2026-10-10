@@ -229,6 +229,10 @@ func TestMainErrorOnStderr(t *testing.T) {
 	if !strings.Contains(stderr, "cannot deduce format") {
 		t.Errorf("Expected the error on stderr, got: %q", stderr)
 	}
+	// The reason of each parser is reported, e.g. of the first one
+	if !strings.Contains(stderr, "MoneyWallet: HeaderError in line 1") {
+		t.Errorf("Expected the reasons of the parsers on stderr, got: %q", stderr)
+	}
 	if strings.Contains(stdout, "cannot deduce format") {
 		t.Errorf("Expected no error on stdout, got: %q", stdout)
 	}

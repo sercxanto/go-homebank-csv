@@ -45,11 +45,12 @@ func (c *ConvertCmd) Run() error {
 	var p parser.Parser
 
 	if c.Format == nil {
-		p = parser.GetGuessedParser(c.Infile)
-		if p == nil {
-			return fmt.Errorf("cannot deduce format for file '%s'", c.Infile)
+		var err error
+		p, err = parser.GuessParser(c.Infile)
+		if err != nil {
+			return fmt.Errorf("file '%s': %w", c.Infile, err)
 		}
-		// GetGuessedParser returns the parser which has already parsed the
+		// GuessParser returns the parser which has already parsed the
 		// file successfully, so the file is not parsed a second time
 		fmt.Printf("Detected format '%s'\n", p.GetFormat())
 	} else {

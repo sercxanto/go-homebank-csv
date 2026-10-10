@@ -403,8 +403,8 @@ func TestBatchConvertConversionError(t *testing.T) {
 	if !strings.Contains(err.Error(), emptyFilePath) {
 		t.Errorf("Expected the error to name the failed file, got '%s'", err)
 	}
-	if status[0].Files[0].Err == nil {
-		t.Errorf("Expected the cause of the failure in the file status")
+	if !errors.Is(status[0].Files[0].Err, parser.ErrUnknownFormat) {
+		t.Errorf("Expected ErrUnknownFormat in the file status, got '%v'", status[0].Files[0].Err)
 	}
 
 	if !reflect.DeepEqual(status, cbStatus) {

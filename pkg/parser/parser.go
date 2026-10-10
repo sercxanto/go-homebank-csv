@@ -5,6 +5,7 @@ package parser
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -57,7 +58,7 @@ func GetParser(s SourceFormat) Parser {
 // The formats are returned in the order in which they are defined. Sorting is
 // needed as the iteration order of a map is not specified: without it the
 // result differs between calls, which shows up in the output of the
-// "list-formats" command and in the order in which GetGuessedParser tries the
+// "list-formats" command and in the order in which GuessParser tries the
 // parsers.
 func GetSourceFormats() []SourceFormat {
 	formats := make([]SourceFormat, 0, len(sourceFormats))
@@ -172,18 +173,39 @@ type Parser interface {
 	GetFormat() SourceFormat
 }
 
-// GetGuessedParser tries to autodetect the file format.
-// It iterates through the available, calls the ParseFile function and returns the
-// first parser which does not fail with an error.
-// It returns nil if no parser could be found.
-func GetGuessedParser(filepath string) Parser {
+// ErrUnknownFormat is the error of GuessParser if no parser accepts the file.
+var ErrUnknownFormat = errors.New("cannot deduce format")
+
+// GuessParser tries to autodetect the file format.
+// It iterates through the available formats, calls the ParseFile function and
+// returns the first parser which does not fail with an error.
+//
+// If no parser accepts the file, the returned error wraps ErrUnknownFormat and
+// the error of each parser, one line per format, e.g.
+//
+//	cannot deduce format
+//	  MoneyWallet: HeaderError in line 1
+//	  Barclaycard: IOError: zip: not a valid zip file
+//	  ...
+func GuessParser(filepath string) (Parser, error) {
+	errs := []error{ErrUnknownFormat}
 	for _, f := range GetSourceFormats() {
 		p := GetParser(f)
-		if err := p.ParseFile(filepath); err == nil {
-			return p
+		err := p.ParseFile(filepath)
+		if err == nil {
+			return p, nil
 		}
+		errs = append(errs, fmt.Errorf("  %s: %w", f, err))
 	}
-	return nil
+	return nil, errors.Join(errs...)
+}
+
+// GetGuessedParser tries to autodetect the file format like GuessParser.
+// It returns nil if no parser could be found. Use GuessParser to get the
+// reason why each parser rejected the file.
+func GetGuessedParser(filepath string) Parser {
+	p, _ := GuessParser(filepath)
+	return p
 }
 
 // Payment types of a homebankRecord, as defined by the HomeBank CSV format.

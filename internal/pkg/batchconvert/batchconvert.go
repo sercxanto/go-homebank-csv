@@ -295,9 +295,9 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 			}
 
 			if set.Format == nil {
-				fileParser = parser.GetGuessedParser(infile)
-				if fileParser == nil {
-					err := errors.New("cannot deduce format")
+				var err error
+				fileParser, err = parser.GuessParser(infile)
+				if err != nil {
 					status[setNr].Files[fileNr].Status = ConversionError
 					status[setNr].Files[fileNr].Err = err
 					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))

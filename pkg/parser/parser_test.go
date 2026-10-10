@@ -180,6 +180,54 @@ func TestGetGuessedParser(t *testing.T) {
 	}
 }
 
+// A file which no parser accepts is reported with the reason of each parser
+func TestGuessParserUnknownFormat(t *testing.T) {
+	fpath := filepath.Join("testfiles", "moneywallet", "converted_1.csv")
+	p, err := GuessParser(fpath)
+	if p != nil {
+		t.Errorf("Expected no parser, got %s", p.GetFormat())
+	}
+	if !errors.Is(err, ErrUnknownFormat) {
+		t.Fatalf("Expected ErrUnknownFormat, got '%v'", err)
+	}
+	var parseErr *ParseError
+	if !errors.As(err, &parseErr) {
+		t.Errorf("Expected the errors of the parsers to be wrapped, got '%v'", err)
+	}
+	lines := strings.Split(err.Error(), "\n")
+	formats := GetSourceFormats()
+	if len(lines) != len(formats)+1 {
+		t.Fatalf("Expected one line per format after the first line, got %q", err.Error())
+	}
+	if lines[0] != ErrUnknownFormat.Error() {
+		t.Errorf("Expected first line %q, got %q", ErrUnknownFormat.Error(), lines[0])
+	}
+	for i, f := range formats {
+		if !strings.HasPrefix(lines[i+1], "  "+f.String()+": ") {
+			t.Errorf("Expected line %d to name format %s, got %q", i+1, f, lines[i+1])
+		}
+	}
+	// The MoneyWallet parser rejects the header in the first line
+	if lines[1] != "  MoneyWallet: HeaderError in line 1" {
+		t.Errorf("Expected the cause of the MoneyWallet parser, got %q", lines[1])
+	}
+}
+
+func TestGuessParser(t *testing.T) {
+	fpath := filepath.Join("testfiles", "dkb", "dkb.csv")
+	p, err := GuessParser(fpath)
+	if err != nil {
+		t.Fatalf("Expected no error, got '%v'", err)
+	}
+	if p == nil || p.GetFormat() != DKB {
+		t.Fatalf("Expected the DKB parser, got %v", p)
+	}
+	// The returned parser has already parsed the file
+	if p.GetNumberOfEntries() == 0 {
+		t.Errorf("Expected parsed entries")
+	}
+}
+
 func TestParseErrorMessage(t *testing.T) {
 	cases := []struct {
 		err      ParseError
