@@ -2,37 +2,46 @@
 
 ## Prerequisites
 
-This software uses [golangci-lint](https://golangci-lint.run), [pkgsite](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite),
+This software uses [Task](https://taskfile.dev) as task runner,
+[golangci-lint](https://golangci-lint.run), [pkgsite](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite),
 [changie](https://changie.dev/) and [goreleaser](https://goreleaser.com/).
 
 When using a Dev Container the tools are available by default. On the local
-machine they can be installed with:
+machine install Task first, either with a package manager (see the
+[installation guide](https://taskfile.dev/installation/)) or with Go:
 
 ```shell
-make install-tools
+GOTOOLCHAIN=auto go install github.com/go-task/task/v3/cmd/task@v3.54.0
+```
+
+Then install the other tools with:
+
+```shell
+task install-tools
 ```
 
 ## Run tools locally
 
-To lint, test and build the code run `make all` or simply `make` as `all` is the
-default make target:
+To lint, test and build the code run `task`, which runs the `default` task:
 
 ```shell
-make
+task
 ```
 
-The single actions also have their own make targets:
+The single actions also have their own tasks:
 
 ```shell
-make lint
-make test
-make build
+task lint
+task test
+task build
 ```
 
-To show the documentation with `pkgsite` `doc-server` can be used:
+`task --list` shows all tasks with a short description.
+
+To show the documentation with `pkgsite` `doc-serve` can be used:
 
 ```shell
-make doc-serve
+task doc-serve
 ```
 
 It starts a server in the foreground and opens a webbrowser.
