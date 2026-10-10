@@ -224,16 +224,16 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 		var fileInfo os.FileInfo
 		fileInfo, err = os.Stat(set.OutputDir)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("set '%s': outputdir: %w", set.Name, err)
 		}
 		if !fileInfo.IsDir() {
-			return status, errors.New("outputDir is not a directory")
+			return status, fmt.Errorf("set '%s': outputdir '%s' is not a directory", set.Name, set.OutputDir)
 		}
 
 		var fileList []string
 		fileList, err = findFiles(set.InputDir, set.FileGlobPattern, getTimeFromMaxAgeDays(uint(set.FileMaxAgeDays), now))
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("set '%s': %w", set.Name, err)
 		}
 
 		setStatus := BatchSetStatus{

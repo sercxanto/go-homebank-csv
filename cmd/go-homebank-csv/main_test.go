@@ -268,7 +268,7 @@ func TestMainBatchConvertInvalidConfig(t *testing.T) {
 	if exitCode == 0 {
 		t.Errorf("Expected non zero exit code, got %d. Output: %s", exitCode, output)
 	}
-	if !strings.Contains(output, "InputDir == OutputDir") {
+	if !strings.Contains(output, "set 'test': inputdir and outputdir are the same directory") {
 		t.Errorf("Expected the validation error in the output, got: %s", output)
 	}
 	if strings.Contains(output, "BatchConvert starting") {

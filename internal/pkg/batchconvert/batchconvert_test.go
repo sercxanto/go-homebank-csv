@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -274,6 +275,13 @@ func TestBatchConvertNonExistentOutputDir(t *testing.T) {
 	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
 		t.Fatalf("BatchConvert should return error")
 	}
+	// The error names the set and keeps the cause
+	if !strings.Contains(err.Error(), "set 'my name': outputdir") {
+		t.Errorf("Expected the error to name the set, got '%s'", err)
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Expected the error to wrap fs.ErrNotExist, got '%s'", err)
+	}
 }
 
 func TestBatchConvertOutputDirNotDir(t *testing.T) {
@@ -301,6 +309,10 @@ func TestBatchConvertOutputDirNotDir(t *testing.T) {
 	}
 	if _, err = BatchConvert(settings, time.Now(), nil, nil); err == nil {
 		t.Fatalf("BatchConvert should return error")
+	}
+	expected := "set 'my name': outputdir '" + testfilePath + "' is not a directory"
+	if err.Error() != expected {
+		t.Errorf("Expected error %q, got '%s'", expected, err)
 	}
 }
 

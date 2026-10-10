@@ -1,0 +1,6 @@
+kind: Changed
+body: |-
+  Name the set and the key of the config file in the errors about an invalid
+  set, e.g. `set 'Bank 1': inputdir is empty` instead of `InputDir is empty`.
+  The errors about an unusable `outputdir` name the set and the directory
+time: 2026-10-10T16:00:00.000000000Z
