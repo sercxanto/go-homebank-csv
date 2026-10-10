@@ -31,6 +31,19 @@ HomeBank is a crossplatform free and easy accounting software.
 * DKB
   * This is the giro account CSV export format used by [www.dkb.de](https://www.dkb.de).
 
+## Installation
+
+Download the archive for your operating system from the
+[releases page](https://github.com/sercxanto/go-homebank-csv/releases) and extract
+the `go-homebank-csv` binary (`go-homebank-csv.exe` on Windows) to a directory in
+your `PATH`.
+
+Alternatively install it with Go:
+
+```shell
+go install github.com/sercxanto/go-homebank-csv/cmd/go-homebank-csv@latest
+```
+
 ## Usage
 
 Show the version:
@@ -114,9 +127,9 @@ The additional fields have the following meaning:
    The glob pattern follows the one from the package [path/filepath](https://pkg.go.dev/path/filepath#Match)
    from golang standard library.
 * `filemaxagedays`: Narrow down the files to search for in `inputdir` by specifying
-   a maximum age in days
-   (modification timestamp) in days. Only positive numbers are allowed.
-* `format`: Specify the exact format to be expected. If not given an probably
+   a maximum age (modification timestamp) in days. Negative numbers are not
+   allowed. `0`, the same as leaving the field out, means no age limit.
+* `format`: Specify the exact format to be expected. If not given a probably
    error-prone and time-consuming autodetection is done.
 
 All keys are lower case. Unknown keys, e.g. a misspelled `inputDir`, and keys
@@ -170,13 +183,13 @@ go-homebank-csv batch-convert
 * Check if a file with the same basename is already at "/home/user/finance/barclaycard/homebankcsv"
   and is not older than the input file
 * If this is not the case convert the found files using the same base name with
-  an extention ".csv" and store them at "/home/user/finance/barclaycard/homebankcsv"
+  an extension ".csv" and store them at "/home/user/finance/barclaycard/homebankcsv"
 * Search in directory "/home/user/finance/volksbank/csv" for files matching "*.csv"
   which have been modified not longer ago than 2 days
 * Check if a file with the same basename is already at "/home/user/finance/volksbank/homebankcsv"
   and is not older than the input file
 * If this is not the case convert the found files using the same base name with
-  an extention ".csv" and store them at "/home/user/finance/volksbank/homebankcsv"
+  an extension ".csv" and store them at "/home/user/finance/volksbank/homebankcsv"
 
 If an input file is newer than the already existing output file, e.g. because
 it has been downloaded again after a faulty download, it is converted again and
