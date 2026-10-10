@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -545,6 +546,81 @@ batchconvert:
 	}
 	if err == nil || !strings.Contains(err.Error(), fpath) {
 		t.Errorf("Expected the error to name the file '%s', got '%v'", fpath, err)
+	}
+}
+
+// Relative paths in a config file refer to the directory of the config file,
+// not to the working directory
+func TestSettingsLoadFromFileResolvesRelativePaths(t *testing.T) {
+	configDir := t.TempDir()
+	absInputDir := filepath.Join(t.TempDir(), "input")
+	config := "batchconvert:\n" +
+		"  sets:\n" +
+		"    - name: relative\n" +
+		"      inputdir: bank/input\n" +
+		"      outputdir: ../output\n" +
+		"    - name: absolute\n" +
+		"      inputdir: " + strconv.Quote(absInputDir) + "\n" +
+		"      outputdir: ~/output\n"
+	fpath := filepath.Join(configDir, "config.yml")
+	if err := os.WriteFile(fpath, []byte(config), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	home, err := userHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var s Settings
+	if err := s.LoadFromFile(fpath); err != nil {
+		t.Fatal(err)
+	}
+
+	sets := s.BatchConvert.Sets
+	expected := []struct{ got, want string }{
+		{sets[0].InputDir, filepath.Join(configDir, "bank", "input")},
+		{sets[0].OutputDir, filepath.Join(filepath.Dir(configDir), "output")},
+		{sets[1].InputDir, absInputDir},
+		{sets[1].OutputDir, filepath.Join(home, "output")},
+	}
+	for _, e := range expected {
+		if e.got != e.want {
+			t.Errorf("Expected '%s', got '%s'", e.want, e.got)
+		}
+	}
+}
+
+// An unsupported path shortcut in a config file is reported
+func TestSettingsLoadFromFileInvalidShortcut(t *testing.T) {
+	config := "batchconvert:\n" +
+		"  sets:\n" +
+		"    - name: invalid\n" +
+		"      inputdir: xdg:unknown\n" +
+		"      outputdir: output\n"
+	fpath := filepath.Join(t.TempDir(), "config.yml")
+	if err := os.WriteFile(fpath, []byte(config), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var s Settings
+	err := s.LoadFromFile(fpath)
+	if err == nil || !strings.Contains(err.Error(), "unknown xdg shortcut 'unknown'") {
+		t.Errorf("Expected error about the unknown shortcut, got '%v'", err)
+	}
+}
+
+func TestResolveRelativePath(t *testing.T) {
+	baseDir := filepath.Join(t.TempDir(), "config")
+	cases := []struct{ path, expected string }{
+		{"", ""},
+		{"input", filepath.Join(baseDir, "input")},
+		{filepath.Join("..", "input"), filepath.Join(filepath.Dir(baseDir), "input")},
+		{"/input", "/input"},
+		{string(filepath.Separator) + "input", string(filepath.Separator) + "input"},
+	}
+	for _, c := range cases {
+		if got := resolveRelativePath(c.path, baseDir); got != c.expected {
+			t.Errorf("Path '%s': expected '%s', got '%s'", c.path, c.expected, got)
+		}
 	}
 }
 

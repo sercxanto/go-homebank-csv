@@ -1,0 +1,7 @@
+kind: Changed
+body: |-
+  Resolve relative paths in the config file, e.g. `inputdir: finance/inbox`,
+  relative to the directory of the config file instead of the current working
+  directory, so that `batch-convert` uses the same directories no matter from
+  where it is started, e.g. by cron
+time: 2026-10-10T17:15:00.000000000Z
