@@ -10,7 +10,7 @@ import (
 
 func TestComdirectName(t *testing.T) {
 	c := &comdirectParser{}
-	if c.GetFormat() != Comdirect {
+	if c.SourceFormat() != Comdirect {
 		t.Error("Wrong format")
 	}
 }
@@ -29,7 +29,7 @@ func TestComdirectParseFileNonExisting(t *testing.T) {
 	} else {
 		t.Error("Expected ParseError")
 	}
-	if v.GetNumberOfEntries() != 0 {
+	if v.Len() != 0 {
 		t.Error("Entries should be empty")
 	}
 }

@@ -2,5 +2,5 @@ kind: Changed
 body: |-
   Report why each format rejected a file whose format cannot be detected, one
   line per format below `cannot deduce format`. The new function
-  `parser.GuessParser` returns this error, which wraps `parser.ErrUnknownFormat`
+  `parser.Detect` returns this error, which wraps `parser.ErrUnknownFormat`
 time: 2026-10-10T16:15:00.000000000Z

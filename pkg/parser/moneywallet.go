@@ -86,11 +86,11 @@ func (m *moneywalletParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (m *moneywalletParser) GetFormat() SourceFormat {
+func (m *moneywalletParser) SourceFormat() SourceFormat {
 	return MoneyWallet
 }
 
-func (m *moneywalletParser) GetNumberOfEntries() int {
+func (m *moneywalletParser) Len() int {
 	return len(m.entries)
 }
 

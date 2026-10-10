@@ -3,7 +3,19 @@ package parser
 import (
 	"os"
 	"strings"
+	"testing"
 )
+
+// mustNew returns a new parser for the given format and fails the test if
+// there is none
+func mustNew(t *testing.T, format SourceFormat) Parser {
+	t.Helper()
+	p, err := New(format)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
 
 func areFilesEqual(file1, file2 string) bool {
 	file1Data, err := os.ReadFile(file1)

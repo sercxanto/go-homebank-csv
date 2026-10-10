@@ -131,11 +131,11 @@ func (p *dkbParser) ParseFile(filepath string) error {
 	return nil
 }
 
-func (p *dkbParser) GetFormat() SourceFormat {
+func (p *dkbParser) SourceFormat() SourceFormat {
 	return DKB
 }
 
-func (p *dkbParser) GetNumberOfEntries() int {
+func (p *dkbParser) Len() int {
 	return len(p.entries)
 }
 

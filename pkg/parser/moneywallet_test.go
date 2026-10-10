@@ -9,7 +9,7 @@ import (
 
 func TestMoneywalletName(t *testing.T) {
 	mw := &moneywalletParser{}
-	if mw.GetFormat() != MoneyWallet {
+	if mw.SourceFormat() != MoneyWallet {
 		t.Error("Wrong format")
 	}
 }
@@ -28,7 +28,7 @@ func TestMoneywalletParseFileNonExisting(t *testing.T) {
 	} else {
 		t.Error("Expected ParseError")
 	}
-	if mw.GetNumberOfEntries() != 0 {
+	if mw.Len() != 0 {
 		t.Error("Entries should be empty")
 	}
 }

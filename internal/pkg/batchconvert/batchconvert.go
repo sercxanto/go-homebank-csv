@@ -294,31 +294,25 @@ func BatchConvert(s settings.BatchConvertSettings, now time.Time, c StatusCallba
 				c(status, userData)
 			}
 
+			var err error
 			if set.Format == nil {
-				var err error
-				fileParser, err = parser.GuessParser(infile)
-				if err != nil {
-					status[setNr].Files[fileNr].Status = ConversionError
-					status[setNr].Files[fileNr].Err = err
-					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
-					if c != nil {
-						c(status, userData)
-					}
-					continue
-				}
+				fileParser, err = parser.Detect(infile)
 			} else {
-				fileParser = parser.GetParser(*set.Format)
-				if err := fileParser.ParseFile(infile); err != nil {
-					status[setNr].Files[fileNr].Status = ConversionError
-					status[setNr].Files[fileNr].Err = err
-					fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
-					if c != nil {
-						c(status, userData)
-					}
-					continue
+				fileParser, err = parser.New(*set.Format)
+				if err == nil {
+					err = fileParser.ParseFile(infile)
 				}
 			}
-			status[setNr].Files[fileNr].Format = parser.NewSourceFormat(fileParser.GetFormat())
+			if err != nil {
+				status[setNr].Files[fileNr].Status = ConversionError
+				status[setNr].Files[fileNr].Err = err
+				fileErrors = append(fileErrors, fmt.Errorf("%s: %w", infile, err))
+				if c != nil {
+					c(status, userData)
+				}
+				continue
+			}
+			status[setNr].Files[fileNr].Format = parser.NewSourceFormat(fileParser.SourceFormat())
 			if err := fileParser.ConvertToHomebank(outfile); err != nil {
 				status[setNr].Files[fileNr].Status = ConversionError
 				status[setNr].Files[fileNr].Err = err

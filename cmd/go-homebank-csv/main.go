@@ -43,23 +43,26 @@ func (c *ConvertCmd) Run() error {
 	fmt.Printf("Converting file '%s' (%s) to file '%s'\n", c.Infile, formatString, c.Outfile)
 
 	var p parser.Parser
+	var err error
 
 	if c.Format == nil {
-		var err error
-		p, err = parser.GuessParser(c.Infile)
+		p, err = parser.Detect(c.Infile)
 		if err != nil {
 			return fmt.Errorf("file '%s': %w", c.Infile, err)
 		}
-		// GuessParser returns the parser which has already parsed the
-		// file successfully, so the file is not parsed a second time
-		fmt.Printf("Detected format '%s'\n", p.GetFormat())
+		// Detect returns the parser which has already parsed the file
+		// successfully, so the file is not parsed a second time
+		fmt.Printf("Detected format '%s'\n", p.SourceFormat())
 	} else {
-		p = parser.GetParser(*c.Format)
+		p, err = parser.New(*c.Format)
+		if err != nil {
+			return err
+		}
 		if err := p.ParseFile(c.Infile); err != nil {
 			return err
 		}
 	}
-	fmt.Printf("Found %d entries\n", p.GetNumberOfEntries())
+	fmt.Printf("Found %d entries\n", p.Len())
 	return p.ConvertToHomebank(c.Outfile)
 }
 
@@ -124,7 +127,7 @@ func (c *BatchConvertCmd) Run() error {
 }
 
 func (l *ListFormatsCmd) Run() error {
-	for _, f := range parser.GetSourceFormats() {
+	for _, f := range parser.SourceFormats() {
 		fmt.Println(f)
 	}
 	return nil

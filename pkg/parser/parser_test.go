@@ -77,12 +77,12 @@ func TestWriteHomeBankRecordsSanitizesFields(t *testing.T) {
 }
 
 // The order of the returned formats has to be stable: it determines the output
-// of the "list-formats" command and the order in which GetGuessedParser tries
+// of the "list-formats" command and the order in which Detect tries
 // the parsers.
-func TestGetSourceFormatsOrder(t *testing.T) {
+func TestSourceFormatsOrder(t *testing.T) {
 	expected := []SourceFormat{MoneyWallet, Barclaycard, Volksbank, Comdirect, DKB}
 
-	formats := GetSourceFormats()
+	formats := SourceFormats()
 	if !slices.Equal(formats, expected) {
 		t.Errorf("Expected %v, got %v", expected, formats)
 	}
@@ -90,30 +90,33 @@ func TestGetSourceFormatsOrder(t *testing.T) {
 	// Repeated calls keep the order. Without sorting this fails, as the
 	// iteration order of a map is randomized.
 	for i := 0; i < 100; i++ {
-		if !slices.Equal(GetSourceFormats(), expected) {
-			t.Fatalf("Call %d returned a different order: %v", i, GetSourceFormats())
+		if !slices.Equal(SourceFormats(), expected) {
+			t.Fatalf("Call %d returned a different order: %v", i, SourceFormats())
 		}
 	}
 }
 
-func TestGetParser(t *testing.T) {
-	for _, f := range GetSourceFormats() {
-		p := GetParser(f)
-		if p == nil {
-			t.Fatal("Parser not found")
+func TestNew(t *testing.T) {
+	for _, f := range SourceFormats() {
+		p, err := New(f)
+		if err != nil || p == nil {
+			t.Fatalf("Parser not found for %s: %v", f, err)
 		}
-		if p.GetFormat() != f {
+		if p.SourceFormat() != f {
 			t.Error("Parser mismatch")
 		}
 	}
-	p := GetParser(999999999)
+	p, err := New(999999999)
 	if p != nil {
-		t.Fatal("Expected nil parser")
+		t.Errorf("Expected nil parser, got %s", p.SourceFormat())
+	}
+	if err == nil || err.Error() != "unsupported source format 999999999" {
+		t.Errorf("Expected unsupported source format error, got '%v'", err)
 	}
 }
 
 func TestSourceFormatString(t *testing.T) {
-	for _, f := range GetSourceFormats() {
+	for _, f := range SourceFormats() {
 		s := SourceFormat(f).String()
 		if s == "" || s == "unknown format" {
 			t.Errorf("Expected valid string, got: %s", s)
@@ -145,7 +148,7 @@ func TestUnmarshalSourceFormatText(t *testing.T) {
 }
 
 func TestNewSourceFormat(t *testing.T) {
-	for _, f := range GetSourceFormats() {
+	for _, f := range SourceFormats() {
 		s := NewSourceFormat(f)
 		if s == nil {
 			t.Error("Expected non nil pointer")
@@ -153,14 +156,7 @@ func TestNewSourceFormat(t *testing.T) {
 	}
 }
 
-func TestGetGuessedParser(t *testing.T) {
-
-	nilFilepath := filepath.Join("testfiles", "moneywallet", "converted_1.csv")
-	p := GetGuessedParser(nilFilepath)
-	if p != nil {
-		t.Errorf("Expected: nil, got: %v, %s", p, p.GetFormat())
-	}
-
+func TestDetect(t *testing.T) {
 	formats := map[string]SourceFormat{
 		filepath.Join("testfiles", "moneywallet", "MoneyWallet_export_1.csv"):                     MoneyWallet,
 		filepath.Join("testfiles", "barclaycard", "Umsaetze.xlsx"):                                Barclaycard,
@@ -170,22 +166,27 @@ func TestGetGuessedParser(t *testing.T) {
 	}
 
 	for testfile, format := range formats {
-		p := GetGuessedParser(testfile)
-		if p == nil {
-			t.Errorf("Parser not found for file: %s", testfile)
+		p, err := Detect(testfile)
+		if err != nil {
+			t.Errorf("Parser not found for file %s: %v", testfile, err)
+			continue
 		}
-		if p != nil && p.GetFormat() != format {
-			t.Errorf("Parser not correct, expected: %s, got: %s", format, p.GetFormat())
+		if p.SourceFormat() != format {
+			t.Errorf("Parser not correct, expected: %s, got: %s", format, p.SourceFormat())
+		}
+		// The returned parser has already parsed the file
+		if p.Len() == 0 {
+			t.Errorf("Expected parsed entries for file %s", testfile)
 		}
 	}
 }
 
 // A file which no parser accepts is reported with the reason of each parser
-func TestGuessParserUnknownFormat(t *testing.T) {
+func TestDetectUnknownFormat(t *testing.T) {
 	fpath := filepath.Join("testfiles", "moneywallet", "converted_1.csv")
-	p, err := GuessParser(fpath)
+	p, err := Detect(fpath)
 	if p != nil {
-		t.Errorf("Expected no parser, got %s", p.GetFormat())
+		t.Errorf("Expected no parser, got %s", p.SourceFormat())
 	}
 	if !errors.Is(err, ErrUnknownFormat) {
 		t.Fatalf("Expected ErrUnknownFormat, got '%v'", err)
@@ -195,7 +196,7 @@ func TestGuessParserUnknownFormat(t *testing.T) {
 		t.Errorf("Expected the errors of the parsers to be wrapped, got '%v'", err)
 	}
 	lines := strings.Split(err.Error(), "\n")
-	formats := GetSourceFormats()
+	formats := SourceFormats()
 	if len(lines) != len(formats)+1 {
 		t.Fatalf("Expected one line per format after the first line, got %q", err.Error())
 	}
@@ -210,21 +211,6 @@ func TestGuessParserUnknownFormat(t *testing.T) {
 	// The MoneyWallet parser rejects the header in the first line
 	if lines[1] != "  MoneyWallet: HeaderError in line 1" {
 		t.Errorf("Expected the cause of the MoneyWallet parser, got %q", lines[1])
-	}
-}
-
-func TestGuessParser(t *testing.T) {
-	fpath := filepath.Join("testfiles", "dkb", "dkb.csv")
-	p, err := GuessParser(fpath)
-	if err != nil {
-		t.Fatalf("Expected no error, got '%v'", err)
-	}
-	if p == nil || p.GetFormat() != DKB {
-		t.Fatalf("Expected the DKB parser, got %v", p)
-	}
-	// The returned parser has already parsed the file
-	if p.GetNumberOfEntries() == 0 {
-		t.Errorf("Expected parsed entries")
 	}
 }
 
@@ -265,8 +251,8 @@ func TestParseErrorUnwrap(t *testing.T) {
 // Every parser keeps the cause of a failed file access, so that callers can
 // tell e.g. a missing file from a file without permission
 func TestParseFileNonExistingKeepsCause(t *testing.T) {
-	for _, format := range GetSourceFormats() {
-		err := GetParser(format).ParseFile(filepath.Join("testfiles", "non_existing_file"))
+	for _, format := range SourceFormats() {
+		err := mustNew(t, format).ParseFile(filepath.Join("testfiles", "non_existing_file"))
 		var pError *ParseError
 		if !errors.As(err, &pError) || pError.Type != IOError {
 			t.Errorf("%s: expected IOError, got %v", format, err)
@@ -279,7 +265,7 @@ func TestParseFileNonExistingKeepsCause(t *testing.T) {
 
 // A malformed value keeps the error of the conversion function as cause
 func TestParseFileDataParsingErrorKeepsCause(t *testing.T) {
-	err := GetParser(DKB).ParseFile(filepath.Join("testfiles", "dkb", "dkb_nok_wrongbetrag.csv"))
+	err := mustNew(t, DKB).ParseFile(filepath.Join("testfiles", "dkb", "dkb_nok_wrongbetrag.csv"))
 	var numError *strconv.NumError
 	if !errors.As(err, &numError) {
 		t.Errorf("Expected strconv.NumError in the error chain, got %v", err)
