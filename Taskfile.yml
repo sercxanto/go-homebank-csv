@@ -25,6 +25,8 @@ tasks:
       - >-
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/{{.GOLANGCI_LINT_VERSION}}/install.sh
         | sh -s -- -b "$(go env GOPATH)/bin" {{.GOLANGCI_LINT_VERSION}}
+      # The versions of pkgsite and changie do not affect the code or the
+      # release, so the latest ones are fine
       - go install golang.org/x/pkgsite/cmd/pkgsite@latest
       - go install github.com/miniscruff/changie@latest
       - GOTOOLCHAIN=auto go install github.com/goreleaser/goreleaser/v2@latest
@@ -37,6 +39,8 @@ tasks:
   test:
     desc: Run the tests
     cmds:
+      # Without -race, as the race detector needs cgo and so a C compiler.
+      # The CI runs the tests with -race.
       - go test -v -cover ./...
 
   build:
