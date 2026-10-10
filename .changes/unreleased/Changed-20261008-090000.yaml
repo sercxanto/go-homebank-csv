@@ -1,6 +1,0 @@
-kind: Changed
-body: |-
-  Reject a config file in which the `outputdir` of one set is the `inputdir` of
-  another set. The converted files are no supported source format, so
-  `batch-convert` failed on them in every later run
-time: 2026-10-08T09:00:00.000000000Z
