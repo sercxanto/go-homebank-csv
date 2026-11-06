@@ -1,0 +1,4 @@
+kind: Fixed
+body: |-
+  Bump DavidAnson/markdownlint-cli2-action from 24.2.0 to 25.0.0
+time: 2026-11-06T12:04:00.000000000Z
