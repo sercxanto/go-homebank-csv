@@ -1,0 +1,4 @@
+kind: Fixed
+body: |-
+  Bump golang.org/x/text from 0.42.0 to 0.43.0
+time: 2026-11-06T12:01:00.000000000Z
