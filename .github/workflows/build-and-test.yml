@@ -20,10 +20,51 @@ permissions:
   contents: read
 
 jobs:
+  # The macOS and Windows jobs are the slowest ones. They are skipped for pull
+  # requests which only change files that cannot affect the build or the tests,
+  # e.g. documentation. Everything not listed below counts as relevant, so new
+  # kinds of files are tested on all platforms by default. Pushes to main always
+  # run on all platforms.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      os: ${{ steps.filter.outputs.os }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+
+    - name: Select the operating systems
+      id: filter
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE: ${{ github.event.pull_request.base.sha }}
+        HEAD: ${{ github.event.pull_request.head.sha }}
+      run: |
+        relevant=true
+        if [ "$EVENT" = pull_request ]; then
+          relevant=false
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/build-and-test.yml) relevant=true ;;
+              *.md | .changes/* | .changie.yaml | .markdownlint.json | LICENSE) ;;
+              .devcontainer/* | .gitignore | .golangci.yml | .goreleaser.yaml) ;;
+              .github/* | Taskfile.yml) ;;
+              *) relevant=true ;;
+            esac
+          done < <(git diff --name-only "$BASE...$HEAD")
+        fi
+        if [ "$relevant" = true ]; then
+          echo 'os=["ubuntu-latest","macos-latest","windows-latest"]' >> "$GITHUB_OUTPUT"
+        else
+          echo 'os=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+        fi
+
   build:
+    needs: changes
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: ${{ fromJSON(needs.changes.outputs.os) }}
     runs-on: ${{ matrix.os }}
 
     steps:
