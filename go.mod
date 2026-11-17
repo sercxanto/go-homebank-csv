@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/kong v1.17.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/xuri/excelize/v2 v2.11.1
-	golang.org/x/text v0.43.0
+	golang.org/x/text v0.44.0
 )
 
 require (
